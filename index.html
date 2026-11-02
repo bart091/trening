@@ -29,11 +29,19 @@
           },
           colors: {
             brand: {
-              50: '#eff6ff',
-              400: '#60a5fa',
-              500: '#3b82f6',
-              600: '#2563eb',
-              700: '#1d4ed8'
+              50: '#fffbeb',
+              100: '#fef3c7',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309'
+            },
+            warmDark: {
+              950: '#141210',
+              900: '#1c1917',
+              850: '#24201d',
+              800: '#292524',
+              700: '#44403c'
             }
           }
         }
@@ -42,7 +50,6 @@
   </script>
 
   <style>
-    /* Blokada przewijania w bok */
     html, body {
       width: 100%;
       max-width: 100vw;
@@ -50,14 +57,13 @@
       position: relative;
       touch-action: pan-y;
       -webkit-tap-highlight-color: transparent;
-      background-color: #090d16;
+      background-color: #141210;
     }
 
     * {
       box-sizing: border-box;
     }
 
-    /* Ukrycie pasków przewijania w poziomych chipach */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -66,7 +72,6 @@
       scrollbar-width: none;
     }
 
-    /* Pulsująca animacja stopera po skończeniu czasu */
     @keyframes restFinishedPulse {
       0%, 100% { transform: scale(1); background-color: rgba(239, 68, 68, 0.2); }
       50% { transform: scale(1.03); background-color: rgba(239, 68, 68, 0.4); }
@@ -78,25 +83,25 @@
     }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen pb-14 font-sans selection:bg-brand-500 selection:text-white">
+<body class="text-stone-100 min-h-screen pb-14 font-sans selection:bg-brand-500 selection:text-stone-950">
 
   <!-- GÓRNY PASEK NAWIGACJI -->
-  <header class="sticky top-0 z-40 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-md shadow-brand-500/20">
-        ⚡
+  <header class="sticky top-0 z-40 bg-[#141210]/95 backdrop-blur-md border-b border-stone-800/80 px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-white shadow-md shadow-amber-600/30">
+        🔥
       </div>
       <div>
-        <h1 class="text-base font-bold tracking-tight text-white leading-tight">Dziennik Treningowy</h1>
-        <p class="text-[11px] text-slate-400 font-medium" id="headerDate">Dziś</p>
+        <h1 class="text-base font-bold tracking-tight text-stone-100 leading-tight">Dziennik Treningowy</h1>
+        <p class="text-[11px] text-stone-400 font-medium" id="headerDate">Dziś</p>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
-      <button id="btnOpenPlans" class="px-2.5 py-1.5 rounded-lg bg-slate-800/90 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition active:scale-95 border border-slate-700/60">
+      <button id="btnOpenPlans" class="px-2.5 py-1.5 rounded-lg bg-stone-850 text-xs font-semibold text-stone-300 hover:text-white hover:bg-stone-800 transition active:scale-95 border border-stone-700/60 shadow-sm">
         📋 Plany
       </button>
-      <button id="btnClearToday" title="Wyczyść dzisiejszy trening" class="p-1.5 rounded-lg bg-slate-800/80 text-slate-400 hover:text-rose-400 hover:bg-slate-700 transition active:scale-95 border border-slate-700/60">
+      <button id="btnClearToday" title="Wyczyść dzisiejszy trening" class="p-1.5 rounded-lg bg-stone-850 text-stone-400 hover:text-rose-400 hover:bg-stone-800 transition active:scale-95 border border-stone-700/60">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
       </button>
     </div>
@@ -106,69 +111,68 @@
   <main class="max-w-lg mx-auto w-full px-4 pt-3 space-y-4">
 
     <!-- MODUŁ LICZNIKA CZASU MIĘDZY SERIAMI (REST TIMER) -->
-    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-lg shadow-black/40">
+    <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-3.5 shadow-lg shadow-black/40">
       <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-xs font-semibold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           Przerwa między seriami
         </span>
-        <label class="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer">
-          <input type="checkbox" id="autoStartTimerCheck" checked class="rounded bg-slate-800 border-slate-700 text-brand-500 focus:ring-0">
+        <label class="flex items-center gap-1.5 text-[11px] text-stone-400 cursor-pointer">
+          <input type="checkbox" id="autoStartTimerCheck" checked class="rounded bg-stone-800 border-stone-700 text-amber-500 focus:ring-0">
           <span>Auto-start</span>
         </label>
       </div>
 
-      <div class="flex items-center justify-between gap-3 bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5">
-        <!-- Wyświetlacz czasu -->
+      <div class="flex items-center justify-between gap-3 bg-[#110f0d] border border-stone-800 rounded-xl p-2.5">
         <div class="flex flex-col">
-          <span id="timerDisplay" class="font-mono text-3xl font-extrabold tracking-wider text-brand-400">01:30</span>
-          <span id="timerStatus" class="text-[10px] text-slate-500 font-medium">Gotowy do startu</span>
+          <span id="timerDisplay" class="font-mono text-3xl font-extrabold tracking-wider text-amber-400">01:30</span>
+          <span id="timerStatus" class="text-[10px] text-stone-500 font-medium">Gotowy do startu</span>
         </div>
 
-        <!-- Sterowanie stoperem -->
         <div class="flex items-center gap-1.5">
-          <button id="btnToggleTimer" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-xs font-bold text-white shadow-md shadow-brand-600/30 transition">
+          <button id="btnToggleTimer" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-95 text-xs font-bold text-stone-950 shadow-md shadow-amber-600/30 transition">
             Start
           </button>
-          <button id="btnAdd30s" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold text-slate-300 border border-slate-700">
+          <button id="btnAdd30s" class="px-2.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-xs font-semibold text-stone-300 border border-stone-700/80">
             +30s
           </button>
-          <button id="btnResetTimer" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-400 border border-slate-700" title="Resetuj">
+          <button id="btnResetTimer" class="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-400 border border-stone-700/80" title="Resetuj">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           </button>
         </div>
       </div>
 
-      <!-- Presety czasu odpoczynku -->
       <div class="grid grid-cols-4 gap-1.5 mt-2.5">
-        <button data-seconds="60" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">60s</button>
-        <button data-seconds="90" class="btn-preset active py-1 text-xs rounded-lg bg-brand-600/20 text-brand-400 font-bold border border-brand-500/40 active:scale-95">90s</button>
-        <button data-seconds="120" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">120s</button>
-        <button data-seconds="180" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">180s</button>
+        <button data-seconds="60" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">60s</button>
+        <button data-seconds="90" class="btn-preset active py-1 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95">90s</button>
+        <button data-seconds="120" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">120s</button>
+        <button data-seconds="180" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">180s</button>
       </div>
     </section>
 
     <!-- AKTYWNY PLAN TRENINGOWY (WIDGET POSTĘPU) -->
-    <section id="activePlanWidget" class="hidden bg-slate-900/80 border border-brand-500/30 rounded-2xl p-3.5 shadow-lg">
+    <section id="activePlanWidget" class="hidden bg-stone-900 border border-amber-500/30 rounded-2xl p-3.5 shadow-lg">
       <div class="flex items-center justify-between mb-1.5">
-        <span class="text-xs font-bold text-brand-400 flex items-center gap-1.5">
+        <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
           <span>🎯</span> <span id="activePlanTitle">Plan Treningowy</span>
         </span>
-        <button id="btnCloseActivePlan" class="text-[11px] text-slate-400 hover:text-slate-200">Zwiń</button>
+        <button id="btnCloseActivePlan" class="text-[11px] text-stone-400 hover:text-stone-200">Zwiń</button>
       </div>
-      <div class="w-full bg-slate-800 rounded-full h-1.5 mb-2 overflow-hidden">
-        <div id="planProgressBar" class="bg-brand-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
+      <div class="w-full bg-stone-950 rounded-full h-1.5 mb-2 overflow-hidden border border-stone-800">
+        <div id="planProgressBar" class="bg-gradient-to-r from-amber-600 to-orange-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
       </div>
-      <div id="activePlanExercises" class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
+      <div id="activePlanExercises" class="flex gap-2 overflow-x-auto no-scrollbar py-0.5"></div>
     </section>
 
     <!-- FORMULARZ DODAWANIA SERII -->
-    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl shadow-black/50">
+    <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-4 shadow-xl shadow-black/50">
       <form id="setForm" onsubmit="return false;" class="space-y-3.5">
         
-        <!-- Wybór / Wpisanie ćwiczenia -->
         <div>
-          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Ćwiczenie</label>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-semibold text-stone-400 uppercase tracking-wider">Ćwiczenie</label>
+            <span id="planTargetHint" class="text-[11px] font-mono text-amber-400 font-semibold hidden"></span>
+          </div>
           <div class="relative">
             <input 
               type="text" 
@@ -176,7 +180,7 @@
               list="commonExercises" 
               placeholder="np. Wyciskanie sztangi leżąc" 
               autocomplete="off"
-              class="w-full bg-slate-950 border border-slate-700/80 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-white rounded-xl px-3.5 py-3 text-sm font-medium placeholder-slate-500 transition outline-none"
+              class="w-full bg-[#110f0d] border border-stone-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-stone-100 rounded-xl px-3.5 py-3 text-sm font-medium placeholder-stone-600 transition outline-none"
             >
             <datalist id="commonExercises">
               <option value="Wyciskanie sztangi leżąc">
@@ -195,64 +199,62 @@
 
           <!-- Szybkie chipy ćwiczeń -->
           <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Wyciskanie</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Przysiad</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Martwy ciąg</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Podciąganie</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">OHP</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Wyciskanie</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Przysiad</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Martwy ciąg</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Podciąganie</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">OHP</button>
           </div>
         </div>
 
-        <!-- Pomiary: Ciężar i Powtórzenia w dwóch wygodnych kolumnach -->
         <div class="grid grid-cols-2 gap-3">
           
           <!-- Ciężar -->
-          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+          <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
             <div class="flex justify-between items-center mb-1">
-              <span class="text-xs font-semibold text-slate-400">Ciężar (kg)</span>
-              <span class="text-[10px] text-slate-500 font-mono">krok 2.5</span>
+              <span class="text-xs font-semibold text-stone-400">Ciężar (kg)</span>
+              <span class="text-[10px] text-amber-500/70 font-mono">krok 2.5</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">−</button>
+              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">−</button>
               <input 
                 type="number" 
                 step="0.5" 
                 id="weightInput" 
                 value="60" 
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 text-center text-lg font-mono font-bold text-white focus:border-brand-500 focus:outline-none"
+                class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
               >
-              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">+</button>
+              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">+</button>
             </div>
           </div>
 
           <!-- Powtórzenia -->
-          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+          <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
             <div class="flex justify-between items-center mb-1">
-              <span class="text-xs font-semibold text-slate-400">Powtórzenia</span>
-              <span class="text-[10px] text-slate-500 font-mono">krok 1</span>
+              <span class="text-xs font-semibold text-stone-400">Powtórzenia</span>
+              <span class="text-[10px] text-amber-500/70 font-mono">krok 1</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">−</button>
+              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">−</button>
               <input 
                 type="number" 
                 step="1" 
                 id="repsInput" 
                 value="8" 
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 text-center text-lg font-mono font-bold text-white focus:border-brand-500 focus:outline-none"
+                class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
               >
-              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">+</button>
+              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">+</button>
             </div>
           </div>
 
         </div>
 
-        <!-- Duży główny przycisk dodawania serii -->
         <button 
           type="button" 
           id="btnSaveSet" 
-          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 active:scale-[0.98] font-bold text-white text-base shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition"
+          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] font-bold text-stone-950 text-base shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          <svg class="w-5 h-5 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
           Zapisz serię
         </button>
       </form>
@@ -262,14 +264,13 @@
     <section class="space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-bold tracking-tight text-white uppercase tracking-wider">Dzisiejsza sesja</h2>
-          <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">0 serii</span>
+          <h2 class="text-sm font-bold tracking-tight text-stone-200 uppercase tracking-wider">Dzisiejsza sesja</h2>
+          <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-850 text-amber-400 border border-stone-800">0 serii</span>
         </div>
 
-        <!-- Przełącznik widoku: Pogrupowane / Ostatnie -->
-        <div class="flex items-center bg-slate-900 border border-slate-800 p-0.5 rounded-lg text-[11px]">
-          <button id="viewGrouped" class="px-2 py-1 rounded font-semibold bg-brand-600 text-white transition">Grupy</button>
-          <button id="viewTimeline" class="px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition">Ostatnie</button>
+        <div class="flex items-center bg-stone-900 border border-stone-800 p-0.5 rounded-lg text-[11px]">
+          <button id="viewGrouped" class="px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition">Grupy</button>
+          <button id="viewTimeline" class="px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition">Ostatnie</button>
         </div>
       </div>
 
@@ -281,42 +282,54 @@
   </main>
 
   <!-- MODAL: ZARZĄDZANIE PLANAMI TRENINGOWYMI -->
-  <div id="plansModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
-      <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-        <h3 class="font-bold text-white text-sm">Plany Treningowe</h3>
-        <button id="btnClosePlans" class="text-slate-400 hover:text-white text-xl p-1 leading-none">&times;</button>
+  <div id="plansModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-3 border-b border-stone-800 flex items-center justify-between">
+        <h3 class="font-bold text-stone-100 text-sm">Plany Treningowe (Serie i Powtórzenia)</h3>
+        <button id="btnClosePlans" class="text-stone-400 hover:text-white text-xl p-1 leading-none">&times;</button>
       </div>
 
       <div class="p-4 overflow-y-auto space-y-4 text-xs">
+        
+        <!-- Szablony -->
         <div>
-          <span class="font-semibold text-slate-400 uppercase tracking-wider text-[10px] block mb-2">Gotowe szablony</span>
+          <span class="font-semibold text-stone-400 uppercase tracking-wider text-[10px] block mb-2">Gotowe szablony</span>
           <div class="grid grid-cols-2 gap-2" id="templatesList"></div>
         </div>
 
-        <div class="border-t border-slate-800 pt-3">
-          <span class="font-semibold text-slate-400 uppercase tracking-wider text-[10px] block mb-1.5">Wklej własny plan (tekst)</span>
-          <p class="text-[11px] text-slate-500 mb-2">Wpisz ćwiczenia w osobnych linijkach, np.: <br><code class="text-slate-400">Przysiad ze sztangą | 4 | 8</code></p>
-          <input type="text" id="customPlanName" placeholder="Nazwa planu (np. Mój FBW)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 mb-2 text-white outline-none focus:border-brand-500">
-          <textarea id="customPlanText" rows="4" placeholder="Wyciskanie leżąc | 4 | 8&#10;Przysiad | 4 | 8&#10;Wiosłowanie | 3 | 10" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-brand-500 font-mono text-[11px]"></textarea>
-          <button id="btnSaveCustomPlan" class="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold border border-slate-700 transition">Zapisz i aktywuj plan</button>
+        <!-- Tryb wklejania tekstu -->
+        <div class="border-t border-stone-800 pt-3">
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="font-semibold text-stone-400 uppercase tracking-wider text-[10px]">Wklej własny plan (Szybki tekst)</span>
+            <span class="text-[10px] text-amber-500 font-mono">Format: Ćwiczenie 4x8</span>
+          </div>
+          <p class="text-[11px] text-stone-400 mb-2 leading-relaxed">
+            Wpisz lub wklej listę linijka po linijce, np.:<br>
+            <code class="text-amber-400 bg-black/40 px-1.5 py-0.5 rounded">Przysiad ze sztangą 4x8</code><br>
+            <code class="text-amber-400 bg-black/40 px-1.5 py-0.5 rounded">Wyciskanie leżąc 4x10</code><br>
+            <code class="text-stone-400 bg-black/40 px-1.5 py-0.5 rounded">Wiosłowanie | 3 | 12</code> (lub format z pionową kreską)
+          </p>
+          <input type="text" id="customPlanName" placeholder="Nazwa Twojego planu (np. Góra Ciała A)" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg px-2.5 py-2 mb-2 text-stone-100 outline-none focus:border-amber-500 font-medium">
+          <textarea id="customPlanText" rows="4" placeholder="Przysiad ze sztangą 4x8&#10;Wyciskanie sztangi leżąc 4x8&#10;Wiosłowanie sztangą 4x10&#10;Wznosy bokiem 3x15" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg p-2.5 text-stone-100 outline-none focus:border-amber-500 font-mono text-[11px] leading-relaxed"></textarea>
+          <button id="btnSaveCustomPlan" class="mt-2 w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 rounded-xl font-bold transition shadow-md">
+            Zapisz i zaczytaj ten plan
+          </button>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT: LOGIKA APLIKACJI, STOPERA I ZAPISU -->
+  <!-- JAVASCRIPT: LOGIKA APLIKACJI -->
   <script>
-    // --- BAZA DANYCH W LOCALSTORAGE ---
     const STORAGE_KEY = 'gym_workout_sets_v2';
     const ACTIVE_PLAN_KEY = 'gym_active_plan_v2';
     const TIMER_PRESET_KEY = 'gym_timer_preset';
 
     let sets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let activePlan = JSON.parse(localStorage.getItem(ACTIVE_PLAN_KEY) || 'null');
-    let currentView = 'grouped'; // 'grouped' lub 'timeline'
+    let currentView = 'grouped';
 
-    // --- ELEMENTY DOM ---
     const exerciseInput = document.getElementById('exerciseInput');
     const weightInput = document.getElementById('weightInput');
     const repsInput = document.getElementById('repsInput');
@@ -324,8 +337,9 @@
     const workoutContainer = document.getElementById('workoutContainer');
     const setsCountBadge = document.getElementById('setsCountBadge');
     const headerDate = document.getElementById('headerDate');
+    const planTargetHint = document.getElementById('planTargetHint');
 
-    // Licznik / Stoper
+    // Stoper
     const timerDisplay = document.getElementById('timerDisplay');
     const timerStatus = document.getElementById('timerStatus');
     const btnToggleTimer = document.getElementById('btnToggleTimer');
@@ -334,7 +348,6 @@
     const autoStartTimerCheck = document.getElementById('autoStartTimerCheck');
     const presetButtons = document.querySelectorAll('.btn-preset');
 
-    // --- ZARZĄDZANIE LICZNIKIEM PRZERW (REST TIMER) ---
     let timerTargetSeconds = parseInt(localStorage.getItem(TIMER_PRESET_KEY) || '90', 10);
     let timerRemainingSeconds = timerTargetSeconds;
     let timerInterval = null;
@@ -357,8 +370,8 @@
       }
       btnToggleTimer.textContent = timerRunning ? 'Pauza' : 'Start';
       btnToggleTimer.className = timerRunning 
-        ? 'px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white shadow transition'
-        : 'px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white shadow transition';
+        ? 'px-3.5 py-2 rounded-xl bg-orange-700 hover:bg-orange-600 text-xs font-bold text-white shadow transition'
+        : 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-xs font-bold text-stone-950 shadow transition';
     }
 
     function playBeep() {
@@ -428,27 +441,25 @@
     presetButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         presetButtons.forEach(b => {
-          b.className = 'btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95';
+          b.className = 'btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95';
         });
-        btn.className = 'btn-preset active py-1 text-xs rounded-lg bg-brand-600/20 text-brand-400 font-bold border border-brand-500/40 active:scale-95';
+        btn.className = 'btn-preset active py-1 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95';
         timerTargetSeconds = parseInt(btn.dataset.seconds, 10);
         localStorage.setItem(TIMER_PRESET_KEY, timerTargetSeconds);
         resetTimer();
       });
     });
 
-    // Ustawienie początkowego presetu
     presetButtons.forEach(b => {
       if (parseInt(b.dataset.seconds, 10) === timerTargetSeconds) {
         b.click();
       }
     });
 
-    // --- INICJALIZACJA DATY ---
     const today = new Date();
     headerDate.textContent = today.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
 
-    // --- PRZYCISKI KROKOWE CIĘŻAR / POWTÓRZENIA ---
+    // Przyciski krokowe
     document.getElementById('btnWeightMinus').addEventListener('click', () => {
       let val = parseFloat(weightInput.value) || 0;
       weightInput.value = Math.max(0, val - 2.5);
@@ -470,11 +481,11 @@
       inp.addEventListener('focus', function() { this.select(); });
     });
 
-    // Szybkie chipy ćwiczeń
     document.querySelectorAll('.quick-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         exerciseInput.value = btn.textContent.trim();
         loadLastValuesForExercise(exerciseInput.value);
+        checkPlanHint();
       });
     });
 
@@ -482,17 +493,37 @@
       const last = [...sets].reverse().find(s => s.exercise.toLowerCase() === name.toLowerCase());
       if (last) {
         weightInput.value = last.weight;
-        repsInput.value = last.reps;
       }
     }
+
+    function checkPlanHint() {
+      const exName = exerciseInput.value.trim().toLowerCase();
+      if (!activePlan || !exName) {
+        planTargetHint.classList.add('hidden');
+        return;
+      }
+      const match = activePlan.exercises.find(e => e.name.toLowerCase() === exName);
+      if (match) {
+        const count = sets.filter(s => s.exercise.toLowerCase() === exName).length;
+        planTargetHint.textContent = `Plan: Seria ${count + 1}/${match.targetSets} (${match.targetReps} powt.)`;
+        planTargetHint.classList.remove('hidden');
+      } else {
+        planTargetHint.classList.add('hidden');
+      }
+    }
+
+    exerciseInput.addEventListener('input', () => {
+      checkPlanHint();
+    });
 
     exerciseInput.addEventListener('change', () => {
       if (exerciseInput.value.trim()) {
         loadLastValuesForExercise(exerciseInput.value.trim());
+        checkPlanHint();
       }
     });
 
-    // --- ZAPIS SERII ---
+    // Zapis serii
     btnSaveSet.addEventListener('click', () => {
       const exercise = exerciseInput.value.trim();
       const weight = parseFloat(weightInput.value);
@@ -520,14 +551,13 @@
       saveSets();
       renderWorkout();
       renderActivePlanWidget();
+      checkPlanHint();
 
-      // Automatyczny start licznika przerwy po serii
       if (autoStartTimerCheck.checked) {
         resetTimer();
         startTimer();
       }
 
-      // Lekkie kliknięcie haptyczne w telefonie
       if ('vibrate' in navigator) {
         navigator.vibrate(30);
       }
@@ -537,15 +567,14 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
     }
 
-    // --- RENDEROWANIE TRENINGU ---
     function renderWorkout() {
       setsCountBadge.textContent = `${sets.length} ${sets.length === 1 ? 'seria' : sets.length < 5 ? 'serie' : 'serii'}`;
 
       if (sets.length === 0) {
         workoutContainer.innerHTML = `
-          <div class="text-center py-10 px-4 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 text-slate-500">
+          <div class="text-center py-10 px-4 bg-stone-900/40 rounded-2xl border border-dashed border-stone-800 text-stone-500">
             <p class="text-sm font-medium">Brak zapisanych serii na dzisiaj.</p>
-            <p class="text-xs mt-1 text-slate-600">Wpisz ćwiczenie powyżej i kliknij „Zapisz serię”.</p>
+            <p class="text-xs mt-1 text-stone-600">Wpisz ćwiczenie powyżej i kliknij „Zapisz serię”.</p>
           </div>
         `;
         return;
@@ -559,7 +588,6 @@
     }
 
     function renderGroupedView() {
-      // Grupowanie serii według ćwiczenia z zachowaniem kolejności
       const groups = {};
       sets.forEach(s => {
         if (!groups[s.exercise]) groups[s.exercise] = [];
@@ -568,21 +596,21 @@
 
       workoutContainer.innerHTML = Object.entries(groups).map(([exercise, groupSets]) => {
         return `
-          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow">
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2">
-              <span class="font-bold text-sm text-brand-400 cursor-pointer hover:underline" onclick="selectExercise('${exercise.replace(/'/g, "\\'")}')">
+          <div class="bg-stone-900 border border-stone-800/90 rounded-xl p-3 shadow">
+            <div class="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
+              <span class="font-bold text-sm text-amber-400 cursor-pointer hover:underline" onclick="selectExercise('${exercise.replace(/'/g, "\\'")}')">
                 ${exercise}
               </span>
-              <span class="text-[11px] text-slate-400 font-mono">${groupSets.length} s.</span>
+              <span class="text-[11px] text-stone-400 font-mono">${groupSets.length} s.</span>
             </div>
             <div class="space-y-1.5">
               ${groupSets.map((s, idx) => `
-                <div class="flex items-center justify-between text-xs bg-slate-950/50 px-2.5 py-1.5 rounded-lg">
-                  <span class="text-slate-400 font-mono">Seria ${idx + 1}</span>
-                  <span class="font-bold font-mono text-white">${s.weight} kg × ${s.reps}</span>
+                <div class="flex items-center justify-between text-xs bg-[#110f0d] px-2.5 py-1.5 rounded-lg border border-stone-800/40">
+                  <span class="text-stone-400 font-mono">Seria ${idx + 1}</span>
+                  <span class="font-bold font-mono text-stone-100">${s.weight} kg × ${s.reps}</span>
                   <div class="flex items-center gap-2">
-                    <span class="text-[10px] text-slate-500">${s.timestamp}</span>
-                    <button onclick="deleteSet('${s.id}')" class="text-slate-500 hover:text-rose-400 p-1">
+                    <span class="text-[10px] text-stone-500">${s.timestamp}</span>
+                    <button onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </div>
@@ -598,14 +626,14 @@
       workoutContainer.innerHTML = `
         <div class="space-y-2">
           ${[...sets].reverse().map(s => `
-            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs">
+            <div class="flex items-center justify-between bg-stone-900 border border-stone-800/90 px-3 py-2 rounded-xl text-xs">
               <div>
-                <p class="font-bold text-white">${s.exercise}</p>
-                <p class="text-[11px] font-mono text-brand-400">${s.weight} kg × ${s.reps} powt.</p>
+                <p class="font-bold text-stone-100">${s.exercise}</p>
+                <p class="text-[11px] font-mono text-amber-400">${s.weight} kg × ${s.reps} powt.</p>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-[10px] text-slate-500 font-mono">${s.timestamp}</span>
-                <button onclick="deleteSet('${s.id}')" class="text-slate-500 hover:text-rose-400 p-1">
+                <span class="text-[10px] text-stone-500 font-mono">${s.timestamp}</span>
+                <button onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
@@ -618,6 +646,7 @@
     window.selectExercise = function(name) {
       exerciseInput.value = name;
       loadLastValuesForExercise(name);
+      checkPlanHint();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -627,25 +656,24 @@
         saveSets();
         renderWorkout();
         renderActivePlanWidget();
+        checkPlanHint();
       }
     };
 
-    // Przełączanie widoków
     document.getElementById('viewGrouped').addEventListener('click', () => {
       currentView = 'grouped';
-      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold bg-brand-600 text-white transition';
-      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition';
+      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
+      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
       renderWorkout();
     });
 
     document.getElementById('viewTimeline').addEventListener('click', () => {
       currentView = 'timeline';
-      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold bg-brand-600 text-white transition';
-      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition';
+      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
+      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
       renderWorkout();
     });
 
-    // Czyszczenie całego dzisiejszego treningu
     document.getElementById('btnClearToday').addEventListener('click', () => {
       if (sets.length === 0) return;
       if (confirm('Czy na pewno chcesz zakończyć i wyczyścić dzisiejszy trening?')) {
@@ -653,6 +681,7 @@
         saveSets();
         renderWorkout();
         renderActivePlanWidget();
+        checkPlanHint();
         resetTimer();
       }
     });
@@ -660,7 +689,7 @@
     // --- MODUŁ PLANÓW TRENINGOWYCH ---
     const DEFAULT_TEMPLATES = [
       {
-        name: 'FBW A (Krata)',
+        name: 'FBW A (Siła / Hipertrofia)',
         exercises: [
           { name: 'Przysiad ze sztangą', targetSets: 4, targetReps: 8 },
           { name: 'Wyciskanie sztangi leżąc', targetSets: 4, targetReps: 8 },
@@ -670,7 +699,7 @@
         ]
       },
       {
-        name: 'FBW B (Plecy/Nogi)',
+        name: 'FBW B (Plecy / Nogi)',
         exercises: [
           { name: 'Martwy ciąg', targetSets: 4, targetReps: 6 },
           { name: 'Wyciskanie hantli skos dodatni', targetSets: 4, targetReps: 10 },
@@ -693,9 +722,9 @@
     function renderTemplatesList() {
       const container = document.getElementById('templatesList');
       container.innerHTML = DEFAULT_TEMPLATES.map((tmpl, idx) => `
-        <button onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-500 text-left transition active:scale-95">
-          <p class="font-bold text-white text-xs">${tmpl.name}</p>
-          <p class="text-[10px] text-slate-500 mt-0.5">${tmpl.exercises.length} ćwiczeń</p>
+        <button onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500 text-left transition active:scale-95">
+          <p class="font-bold text-stone-100 text-xs">${tmpl.name}</p>
+          <p class="text-[10px] text-amber-500 font-mono mt-0.5">${tmpl.exercises.length} ćwiczeń z seriami/powt.</p>
         </button>
       `).join('');
     }
@@ -705,29 +734,78 @@
       localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
       plansModal.classList.add('hidden');
       renderActivePlanWidget();
+      checkPlanHint();
     };
+
+    // Parser tekstu obsługujący "Ćwiczenie 4x8", "Ćwiczenie | 4 | 8", "Ćwiczenie, 4, 8"
+    function parseExerciseLine(line) {
+      line = line.trim();
+      if (!line) return null;
+
+      // 1. Obsługa formatu: "Nazwa ćwiczenia 4x8" lub "Nazwa ćwiczenia 4 x 8"
+      const xMatch = line.match(/^(.*?)[,\s|]+(\d+)\s*[xX*×]\s*(\d+)\s*$/);
+      if (xMatch) {
+        return {
+          name: xMatch[1].trim(),
+          targetSets: parseInt(xMatch[2], 10),
+          targetReps: parseInt(xMatch[3], 10)
+        };
+      }
+
+      // 2. Obsługa formatu z kreskami / przecinkami: "Nazwa | 4 | 8" lub "Nazwa, 4, 8"
+      const delimiter = line.includes('|') ? '|' : (line.includes(',') ? ',' : null);
+      if (delimiter) {
+        const parts = line.split(delimiter).map(p => p.trim());
+        if (parts.length >= 3) {
+          return {
+            name: parts[0],
+            targetSets: parseInt(parts[1], 10) || 3,
+            targetReps: parseInt(parts[2], 10) || 10
+          };
+        } else if (parts.length === 2) {
+          return {
+            name: parts[0],
+            targetSets: parseInt(parts[1], 10) || 3,
+            targetReps: 10
+          };
+        }
+      }
+
+      // 3. Wpisana sama nazwa ćwiczenia (domyślnie 3 serie po 10 powtórzeń)
+      return {
+        name: line,
+        targetSets: 3,
+        targetReps: 10
+      };
+    }
 
     document.getElementById('btnSaveCustomPlan').addEventListener('click', () => {
       const name = document.getElementById('customPlanName').value.trim() || 'Własny Plan';
       const text = document.getElementById('customPlanText').value.trim();
       if (!text) {
-        alert('Wklej przynajmniej jedno ćwiczenie!');
+        alert('Wklej przynajmniej jedno ćwiczenie z liczbą serii i powtórzeń!');
         return;
       }
-      const lines = text.split('\n').filter(l => l.trim().length > 0);
-      const exercises = lines.map(line => {
-        const parts = line.split('|').map(p => p.trim());
-        return {
-          name: parts[0],
-          targetSets: parseInt(parts[1], 10) || 3,
-          targetReps: parseInt(parts[2], 10) || 10
-        };
+      
+      const lines = text.split('\n');
+      const exercises = [];
+      lines.forEach(l => {
+        const parsed = parseExerciseLine(l);
+        if (parsed && parsed.name) {
+          exercises.push(parsed);
+        }
       });
+
+      if (exercises.length === 0) {
+        alert('Nie udało się rozpoznać ćwiczeń. Użyj formatu np. "Wyciskanie 4x8"');
+        return;
+      }
 
       activePlan = { name, exercises };
       localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
       plansModal.classList.add('hidden');
       renderActivePlanWidget();
+      checkPlanHint();
     });
 
     document.getElementById('btnCloseActivePlan').addEventListener('click', () => {
@@ -735,6 +813,7 @@
         activePlan = null;
         localStorage.removeItem(ACTIVE_PLAN_KEY);
         renderActivePlanWidget();
+        checkPlanHint();
       }
     });
 
@@ -758,13 +837,16 @@
         const isDone = count >= ex.targetSets;
 
         return `
-          <button onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps})" class="px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap active:scale-95 transition flex items-center gap-1.5 ${
+          <button onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps}, ${ex.targetSets})" class="px-2.5 py-1.5 rounded-xl border text-left whitespace-nowrap active:scale-95 transition flex flex-col gap-0.5 ${
             isDone 
-              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
-              : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
+              ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' 
+              : 'bg-[#110f0d] border-stone-800 text-stone-300 hover:border-amber-500/50'
           }">
-            <span class="text-xs font-medium">${ex.name}</span>
-            <span class="text-[10px] font-mono px-1 py-0.2 rounded ${isDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">${count}/${ex.targetSets}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-semibold">${ex.name}</span>
+              <span class="text-[10px] font-mono px-1 py-0.2 rounded font-bold ${isDone ? 'bg-amber-500/20 text-amber-300' : 'bg-stone-800 text-amber-400'}">${count}/${ex.targetSets} s.</span>
+            </div>
+            <span class="text-[10px] text-stone-500 font-mono">cel: ${ex.targetSets} × ${ex.targetReps} powt.</span>
           </button>
         `;
       }).join('');
@@ -773,14 +855,15 @@
       document.getElementById('planProgressBar').style.width = `${progress}%`;
     }
 
-    window.selectPlanExercise = function(name, defaultReps) {
+    window.selectPlanExercise = function(name, defaultReps, targetSets) {
       exerciseInput.value = name;
       repsInput.value = defaultReps || 8;
       loadLastValuesForExercise(name);
+      checkPlanHint();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Inicjalizacja przy starcie
+    // Start
     renderWorkout();
     renderActivePlanWidget();
     updateTimerUI();
