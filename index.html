@@ -1,1911 +1,789 @@
 <!DOCTYPE html>
 <html lang="pl" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Szybki Dziennik Treningowy</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    colors: {
-                        zinc: {
-                            850: '#1f1f22',
-                            925: '#121214',
-                            950: '#09090b',
-                        },
-                        lime: {
-                            450: '#a3e635',
-                        }
-                    }
-                }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dziennik Treningowy</title>
+
+  <!-- PWA & Ekran Główny -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trening">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8'
             }
+          }
         }
-    </script>
+      }
+    };
+  </script>
 
-    <style>
-        /* Zapobieganie przybliżaniu na iOS (rozmiar czcionki >= 16px) oraz optymalizacja pod dotyk */
-        input, button, select, textarea {
-            font-size: 16px !important;
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <style>
+    /* Blokada przewijania w bok */
+    html, body {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden !important;
+      position: relative;
+      touch-action: pan-y;
+      -webkit-tap-highlight-color: transparent;
+      background-color: #090d16;
+    }
 
-        /* Ukrycie domyślnych strzałek w polach numerycznych */
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        /* Ukrycie paska przewijania dla poziomych chipów przy zachowaniu płynnego przewijania */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+    /* Ukrycie pasków przewijania w poziomych chipach */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
 
-        /* Delikatna animacja pojawiania się nowych elementów */
-        @keyframes slideDownFade {
-            from {
-                opacity: 0;
-                transform: translateY(-6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        .animate-entry {
-            animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        /* Efekt wciśnięcia przycisku */
-        .active-press:active {
-            transform: scale(0.97);
-        }
-    </style>
+    /* Pulsująca animacja stopera po skończeniu czasu */
+    @keyframes restFinishedPulse {
+      0%, 100% { transform: scale(1); background-color: rgba(239, 68, 68, 0.2); }
+      50% { transform: scale(1.03); background-color: rgba(239, 68, 68, 0.4); }
+    }
+    .timer-alert {
+      animation: restFinishedPulse 1s infinite ease-in-out;
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+  </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans min-h-screen pb-16 selection:bg-lime-400 selection:text-zinc-950 antialiased">
+<body class="text-slate-100 min-h-screen pb-14 font-sans selection:bg-brand-500 selection:text-white">
 
-    <!-- GŁÓWNY KONTENER MOBILNY -->
-    <div class="max-w-md mx-auto min-h-screen flex flex-col">
-
-        <!-- 1. PRZYLEPNY NAGŁÓWEK ZE STATYSTYKAMI I STOPEREM PRZERWY -->
-        <header class="sticky top-0 z-30 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80 px-4 py-3">
-            <div class="flex items-center justify-between gap-2">
-                <!-- Tytuł i dzisiejsza data -->
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-lime-400 animate-pulse"></span>
-                        <h1 class="text-base font-extrabold tracking-tight text-white uppercase">Trening</h1>
-                        <span id="current-date" class="text-xs font-medium text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded-md border border-zinc-800"></span>
-                    </div>
-                    <!-- Podsumowanie na żywo -->
-                    <div class="flex items-center gap-3 mt-1 text-xs text-zinc-400">
-                        <span>Serie: <strong id="stat-sets" class="text-zinc-100 font-mono">0</strong></span>
-                        <span>•</span>
-                        <span>Objętość: <strong id="stat-volume" class="text-lime-400 font-mono">0 kg</strong></span>
-                    </div>
-                </div>
-
-                <!-- Prawa strona nagłówka: Przycisk Planów + Mini Stoper Przerwy -->
-                <div class="flex items-center gap-1.5">
-                    <!-- Przycisk otwierający moduł Planów Treningowych -->
-                    <button id="open-plans-btn" type="button" title="Plany treningowe"
-                        class="h-11 px-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700 border border-zinc-800 flex items-center gap-1.5 text-xs font-bold text-zinc-200 transition-all active-press shadow-inner">
-                        <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                        </svg>
-                        <span>Plany</span>
-                    </button>
-
-                    <!-- Mini Stoper Przerwy (automatycznie startuje po zapisaniu serii) -->
-                    <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl p-1.5 shadow-inner">
-                        <div class="px-2 text-right">
-                            <span class="block text-[10px] uppercase tracking-wider text-zinc-400 font-semibold leading-none">Przerwa</span>
-                            <span id="timer-display" class="font-mono text-sm font-bold text-zinc-200 tracking-tight">00:00</span>
-                        </div>
-                        <div class="flex items-center gap-1 pl-1 border-l border-zinc-800">
-                            <button id="timer-toggle-btn" type="button" title="Start / Pauza"
-                                class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 flex items-center justify-center text-zinc-200 transition-colors">
-                                <!-- Ikona Play/Pause dynamicznie podmieniana -->
-                                <svg id="timer-icon-play" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                                </svg>
-                                <svg id="timer-icon-pause" class="w-4 h-4 hidden text-lime-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                            <button id="timer-reset-btn" type="button" title="Resetuj stoper"
-                                class="w-8 h-8 rounded-lg bg-zinc-800/60 hover:bg-zinc-700 active:bg-zinc-600 flex items-center justify-center text-zinc-400 hover:text-zinc-200 transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- GŁÓWNA ZAWARTOŚĆ -->
-        <main class="flex-1 px-4 pt-4 space-y-5">
-
-            <!-- 1.5 INTERAKTYWNY WIDŻET AKTYWNEGO PLANU TRENINGOWEGO -->
-            <section id="active-plan-banner" aria-label="Aktywny plan treningowy" class="hidden bg-zinc-900/95 border border-lime-400/40 rounded-2xl p-3.5 shadow-xl space-y-3 animate-entry">
-                <div class="flex items-center justify-between gap-2">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-lime-400/15 text-lime-400 border border-lime-400/30">
-                                Aktywny Plan
-                            </span>
-                            <span id="active-plan-progress-badge" class="text-xs font-mono font-bold text-zinc-400">0/0</span>
-                        </div>
-                        <h2 id="active-plan-title" class="text-sm font-extrabold text-white truncate mt-1"></h2>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button type="button" id="next-plan-exercise-btn" title="Przejdź do kolejnego nieukończonego ćwiczenia"
-                            class="h-9 px-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-xs flex items-center gap-1 transition-all active-press">
-                            <span>Następne</span>
-                            <svg class="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                        <button type="button" id="change-plan-btn" title="Zmień lub wyłącz plan"
-                            class="h-9 w-9 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center border border-zinc-700/60 transition-all active-press">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
-                            </svg>
-                        </button>
-                        <button type="button" id="unload-plan-btn" title="Wyłącz aktywny plan"
-                            class="h-9 w-9 rounded-xl bg-zinc-800/70 hover:bg-red-950/60 text-zinc-400 hover:text-red-300 flex items-center justify-center border border-zinc-800 transition-all active-press">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Pasek postępu planu -->
-                <div class="w-full h-1.5 bg-zinc-950 rounded-full overflow-hidden border border-zinc-800/80">
-                    <div id="active-plan-progress-bar" class="h-full bg-lime-400 transition-all duration-300" style="width: 0%"></div>
-                </div>
-
-                <!-- Lista ćwiczeń z planu -->
-                <div id="active-plan-exercises" class="grid grid-cols-1 gap-1.5 max-h-56 overflow-y-auto pr-0.5">
-                    <!-- Wypełniane dynamicznie przez JS -->
-                </div>
-            </section>
-
-            <!-- Pasek zachęty do wczytania planu, gdy żaden plan nie jest aktywny -->
-            <div id="no-plan-bar" class="flex items-center justify-between bg-zinc-900/50 border border-zinc-800/80 rounded-xl px-3.5 py-2.5">
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <svg class="w-4 h-4 text-lime-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span class="text-xs text-zinc-400 truncate">Trenujesz według rozpiski?</span>
-                </div>
-                <button type="button" id="quick-load-plan-btn" class="text-xs font-bold text-lime-400 hover:text-lime-300 shrink-0 pl-2 py-0.5">
-                    Wczytaj plan →
-                </button>
-            </div>
-
-            <!-- 2. FORMULARZ SZYBKIEGO DODAWANIA SERII -->
-            <section aria-label="Dodaj nową serię" class="bg-zinc-900/90 border border-zinc-800/90 rounded-2xl p-4 shadow-xl">
-                <form id="set-form" class="space-y-4" autocomplete="off">
-                    
-                    <!-- Wybór / wpisanie ćwiczenia -->
-                    <div>
-                        <div class="flex justify-between items-center mb-1.5">
-                            <label for="exercise-input" class="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                Ćwiczenie
-                            </label>
-                            <button type="button" id="clear-exercise-btn" class="text-xs text-zinc-500 hover:text-zinc-300 hidden py-0.5 px-1.5 rounded">
-                                Wyczyść pole
-                            </button>
-                        </div>
-                        
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                id="exercise-input" 
-                                list="exercises-datalist"
-                                placeholder="Wybierz poniżej lub wpisz własne..." 
-                                required
-                                class="w-full h-12 px-3.5 bg-zinc-950 border border-zinc-700/80 rounded-xl text-white placeholder-zinc-500 font-medium focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400 transition-all"
-                            >
-                            <datalist id="exercises-datalist"></datalist>
-                        </div>
-
-                        <!-- Pasek szybkiego wyboru ćwiczeń (Chipy) -->
-                        <div class="mt-2.5">
-                            <div id="exercise-chips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
-                                <!-- Chipy generowane dynamicznie w JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Wiersz: Ciężar (kg) oraz Powtórzenia -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                        
-                        <!-- Kontrolka: Ciężar (kg) -->
-                        <div class="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/80">
-                            <label for="weight-input" class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 text-center">
-                                Ciężar <span class="text-zinc-500 font-normal">(kg)</span>
-                            </label>
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" data-step-weight="-2.5" 
-                                    class="h-12 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 font-mono font-bold text-sm transition-all active-press select-none shrink-0 border border-zinc-700/50">
-                                    -2.5
-                                </button>
-                                <input 
-                                    type="number" 
-                                    id="weight-input" 
-                                    step="0.5" 
-                                    min="0" 
-                                    max="999"
-                                    inputmode="decimal" 
-                                    placeholder="0"
-                                    required
-                                    class="w-full h-12 bg-zinc-900 border border-zinc-700/80 rounded-xl text-center font-mono text-xl font-bold text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400"
-                                >
-                                <button type="button" data-step-weight="2.5" 
-                                    class="h-12 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-lime-400 font-mono font-bold text-sm transition-all active-press select-none shrink-0 border border-zinc-700/50">
-                                    +2.5
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Kontrolka: Powtórzenia -->
-                        <div class="bg-zinc-950/70 p-2.5 rounded-xl border border-zinc-800/80">
-                            <label for="reps-input" class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 text-center">
-                                Powtórzenia
-                            </label>
-                            <div class="flex items-center gap-1.5">
-                                <button type="button" data-step-reps="-1" 
-                                    class="h-12 w-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-zinc-200 font-mono font-bold text-lg transition-all active-press select-none shrink-0 border border-zinc-700/50">
-                                    -1
-                                </button>
-                                <input 
-                                    type="number" 
-                                    id="reps-input" 
-                                    step="1" 
-                                    min="1" 
-                                    max="999"
-                                    inputmode="numeric" 
-                                    placeholder="0"
-                                    required
-                                    class="w-full h-12 bg-zinc-900 border border-zinc-700/80 rounded-xl text-center font-mono text-xl font-bold text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400"
-                                >
-                                <button type="button" data-step-reps="1" 
-                                    class="h-12 w-12 rounded-xl bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-lime-400 font-mono font-bold text-lg transition-all active-press select-none shrink-0 border border-zinc-700/50">
-                                    +1
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Komunikat walidacji (jeśli potrzebny) -->
-                    <p id="form-error" class="text-xs text-red-400 font-medium hidden text-center"></p>
-
-                    <!-- Główny przycisk zapisu serii -->
-                    <button 
-                        type="submit" 
-                        id="save-set-btn"
-                        class="w-full h-14 bg-lime-400 hover:bg-lime-300 active:bg-lime-500 text-zinc-950 font-extrabold text-base uppercase tracking-wide rounded-xl shadow-lg shadow-lime-400/10 flex items-center justify-center gap-2 transition-all active-press select-none">
-                        <svg class="w-5 h-5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        <span>Zapisz serię</span>
-                    </button>
-                </form>
-            </section>
-
-            <!-- 3. WIDOK BIEŻĄCEGO TRENINGU (DZISIEJSZA SESJA) -->
-            <section aria-label="Dzisiejsza sesja" class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-sm font-extrabold uppercase tracking-wider text-zinc-300 flex items-center gap-2">
-                        <span>Dzisiejsza sesja</span>
-                    </h2>
-
-                    <!-- Przełącznik widoku: Pogrupowane / Chronologicznie -->
-                    <div class="inline-flex bg-zinc-900 p-1 rounded-xl border border-zinc-800 text-xs font-semibold">
-                        <button type="button" id="view-grouped-btn" class="px-2.5 py-1.5 rounded-lg bg-zinc-800 text-lime-400 transition-all">
-                            Pogrupowane
-                        </button>
-                        <button type="button" id="view-chrono-btn" class="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all">
-                            Chronologicznie
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Kontener na listę serii -->
-                <div id="sets-container" class="space-y-3">
-                    <!-- Wypełniane dynamicznie przez JS -->
-                </div>
-
-                <!-- Przycisk zakończenia / wyczyszczenia dzisiejszego treningu -->
-                <div id="workout-actions" class="pt-4 hidden">
-                    <button 
-                        type="button" 
-                        id="finish-workout-btn"
-                        class="w-full h-12 bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-sm rounded-xl border border-zinc-800 flex items-center justify-center gap-2 transition-all active-press">
-                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>Zakończ / Wyczyść trening</span>
-                    </button>
-                </div>
-            </section>
-
-            <!-- 4. ARCHIWUM OSTATNICH TRENINGÓW (ZWinięte domyślnie) -->
-            <section id="history-section" class="pt-2 border-t border-zinc-900 hidden">
-                <details class="group bg-zinc-900/50 border border-zinc-800/70 rounded-2xl overflow-hidden">
-                    <summary class="flex items-center justify-between px-4 py-3.5 cursor-pointer select-none text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-zinc-200">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>Historia ostatnich treningów (<span id="history-count">0</span>)</span>
-                        </div>
-                        <svg class="w-4 h-4 text-zinc-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </summary>
-                    <div class="px-4 pb-4 pt-1 space-y-3 border-t border-zinc-800/60">
-                        <div id="history-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                            <!-- Wypełniane przez JS -->
-                        </div>
-                        <button type="button" id="clear-history-btn" class="text-xs text-red-400/80 hover:text-red-400 underline pt-1 block ml-auto">
-                            Wyczyść całą historię
-                        </button>
-                    </div>
-                </details>
-            </section>
-
-        </main>
+  <!-- GÓRNY PASEK NAWIGACJI -->
+  <header class="sticky top-0 z-40 bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-600 to-cyan-400 flex items-center justify-center font-bold text-white shadow-md shadow-brand-500/20">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white leading-tight">Dziennik Treningowy</h1>
+        <p class="text-[11px] text-slate-400 font-medium" id="headerDate">Dziś</p>
+      </div>
     </div>
 
-    <!-- MODAL ZARZĄDZANIA I WCZYTYWANIA PLANÓW TRENINGOWYCH -->
-    <div id="plans-modal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs hidden items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-zinc-900 border-t sm:border border-zinc-800 rounded-t-3xl sm:rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col shadow-2xl animate-entry">
-            
-            <!-- Nagłówek modala -->
-            <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-                <div>
-                    <h3 class="text-base font-extrabold text-white uppercase tracking-tight">Plany Treningowe</h3>
-                    <p class="text-xs text-zinc-400">Wybierz gotowy szablon lub wklej własną rozpiskę</p>
-                </div>
-                <button type="button" id="close-plans-modal-btn" aria-label="Zamknij"
-                    class="w-9 h-9 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+    <div class="flex items-center gap-2">
+      <button id="btnOpenPlans" class="px-2.5 py-1.5 rounded-lg bg-slate-800/90 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition active:scale-95 border border-slate-700/60">
+        📋 Plany
+      </button>
+      <button id="btnClearToday" title="Wyczyść dzisiejszy trening" class="p-1.5 rounded-lg bg-slate-800/80 text-slate-400 hover:text-rose-400 hover:bg-slate-700 transition active:scale-95 border border-slate-700/60">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+      </button>
+    </div>
+  </header>
 
-            <!-- Nawigacja zakładek wewnątrz modala -->
-            <div class="grid grid-cols-3 gap-1 bg-zinc-950 p-1.5 mx-5 mt-3 rounded-xl border border-zinc-800 text-xs font-bold">
-                <button type="button" data-plan-tab="list" class="plan-tab-btn py-2 rounded-lg bg-zinc-800 text-lime-400 transition-all">
-                    Wybierz plan
-                </button>
-                <button type="button" data-plan-tab="create" class="plan-tab-btn py-2 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all">
-                    + Własny plan
-                </button>
-                <button type="button" data-plan-tab="backup" class="plan-tab-btn py-2 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all">
-                    Import / Eksport
-                </button>
-            </div>
+  <!-- KONTENER GŁÓWNY -->
+  <main class="max-w-lg mx-auto w-full px-4 pt-3 space-y-4">
 
-            <!-- Zawartość zakładek (przewijana) -->
-            <div class="flex-1 overflow-y-auto p-5 space-y-4">
-                
-                <!-- ZAKŁADKA 1: LISTA PLANÓW (Szablony + Własne) -->
-                <div id="plan-tab-list" class="space-y-3">
-                    <div id="plans-list-container" class="space-y-2.5">
-                        <!-- Renderowane dynamicznie przez JS -->
-                    </div>
-                </div>
+    <!-- MODUŁ LICZNIKA CZASU MIĘDZY SERIAMI (REST TIMER) -->
+    <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 shadow-lg shadow-black/40">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Przerwa między seriami
+        </span>
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer">
+          <input type="checkbox" id="autoStartTimerCheck" checked class="rounded bg-slate-800 border-slate-700 text-brand-500 focus:ring-0">
+          <span>Auto-start</span>
+        </label>
+      </div>
 
-                <!-- ZAKŁADKA 2: DODAWANIE / WKLEJANIE WŁASNEGO PLANU -->
-                <div id="plan-tab-create" class="hidden space-y-4">
-                    <div>
-                        <label for="new-plan-name" class="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1.5">
-                            Nazwa planu
-                        </label>
-                        <input type="text" id="new-plan-name" placeholder="np. Góra A / Mój Split / Wtorek"
-                            class="w-full h-11 px-3.5 bg-zinc-950 border border-zinc-700/80 rounded-xl text-white placeholder-zinc-500 text-sm font-medium focus:outline-none focus:border-lime-400">
-                    </div>
-
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label for="new-plan-text" class="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                Lista ćwiczeń (1 w linii)
-                            </label>
-                            <button type="button" id="fill-sample-plan-btn" class="text-[11px] font-semibold text-lime-400 hover:underline">
-                                Wstaw przykład
-                            </button>
-                        </div>
-                        <textarea id="new-plan-text" rows="6"
-                            placeholder="Wyciskanie sztangi leżąc | 4 | 8&#10;Przysiad ze sztangą | 3 | 6&#10;Podciąganie na drążku | 3 | 10&#10;Wznosy hantli bokiem"
-                            class="w-full p-3 bg-zinc-950 border border-zinc-700/80 rounded-xl text-white placeholder-zinc-600 text-sm font-mono focus:outline-none focus:border-lime-400 leading-relaxed"></textarea>
-                        <p class="text-[11px] text-zinc-400 mt-1.5 leading-normal">
-                            Format: <code class="text-zinc-200 bg-zinc-800 px-1 py-0.5 rounded">Ćwiczenie | Serie | Powtórzenia</code> lub <code class="text-zinc-200 bg-zinc-800 px-1 py-0.5 rounded">Ćwiczenie 4x8</code> lub sama nazwa ćwiczenia (domyślnie 3 serie × 8 powt.).
-                        </p>
-                    </div>
-
-                    <p id="plan-create-error" class="text-xs text-red-400 font-medium hidden"></p>
-
-                    <div class="flex gap-2 pt-1">
-                        <button type="button" id="save-custom-plan-btn"
-                            class="flex-1 h-12 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-extrabold text-sm rounded-xl transition-all active-press">
-                            Zapisz i wczytaj plan
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ZAKŁADKA 3: IMPORT / EKSPORT JSON I SCHOWEK -->
-                <div id="plan-tab-backup" class="hidden space-y-4">
-                    <div class="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-300">Eksportuj własne plany</h4>
-                        <p class="text-xs text-zinc-400">Skopiuj wszystkie swoje plany do schowka lub pobierz jako plik JSON.</p>
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button type="button" id="copy-plans-json-btn"
-                                class="h-11 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs rounded-xl border border-zinc-700 transition-all active-press">
-                                Kopiuj JSON
-                            </button>
-                            <button type="button" id="download-plans-json-btn"
-                                class="h-11 bg-zinc-800 hover:bg-zinc-700 text-lime-400 font-semibold text-xs rounded-xl border border-zinc-700 transition-all active-press">
-                                Pobierz plik .json
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="bg-zinc-950/80 border border-zinc-800 rounded-xl p-3.5 space-y-2.5">
-                        <h4 class="text-xs font-bold uppercase tracking-wider text-zinc-300">Importuj plany z pliku lub JSON</h4>
-                        <label class="flex items-center justify-center w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-semibold text-xs rounded-xl border border-dashed border-zinc-700 cursor-pointer transition-all">
-                            <span>Wybierz plik .json z urządzenia</span>
-                            <input type="file" id="import-json-file-input" accept=".json,application/json" class="hidden">
-                        </label>
-
-                        <div class="pt-1 space-y-2">
-                            <textarea id="import-json-textarea" rows="3" placeholder="Lub wklej tutaj kod JSON z planami..."
-                                class="w-full p-2.5 bg-zinc-900 border border-zinc-800 rounded-xl text-xs font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-lime-400"></textarea>
-                            <button type="button" id="import-json-btn"
-                                class="w-full h-11 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-xs rounded-xl transition-all active-press">
-                                Zaimportuj wklejony JSON
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+      <div class="flex items-center justify-between gap-3 bg-slate-950/60 border border-slate-800/80 rounded-xl p-2.5">
+        <!-- Wyświetlacz czasu -->
+        <div class="flex flex-col">
+          <span id="timerDisplay" class="font-mono text-3xl font-extrabold tracking-wider text-brand-400">01:30</span>
+          <span id="timerStatus" class="text-[10px] text-slate-500 font-medium">Gotowy do startu</span>
         </div>
-    </div>
 
-    <!-- MODAL POTWIERDZENIA ZAKOŃCZENIA / WYCZYSCZENIA TRENINGU -->
-    <div id="confirm-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs hidden items-center justify-center p-4">
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 animate-entry">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-lime-400/10 border border-lime-400/30 flex items-center justify-center text-lime-400 shrink-0">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-white">Zakończyć dzisiejszy trening?</h3>
-                    <p class="text-xs text-zinc-400">Wybierz, co zrobić z zapisanymi dzisiaj seriami.</p>
-                </div>
-            </div>
-
-            <div class="space-y-2.5 pt-1">
-                <button type="button" id="modal-archive-btn"
-                    class="w-full h-12 bg-lime-400 hover:bg-lime-300 text-zinc-950 font-bold text-sm rounded-xl transition-all active-press flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                    <span>Zapisz w historii i wyczyść widok</span>
-                </button>
-
-                <button type="button" id="modal-delete-btn"
-                    class="w-full h-12 bg-red-950/60 hover:bg-red-900/70 text-red-300 border border-red-800/60 font-semibold text-sm rounded-xl transition-all active-press">
-                    Usuń dzisiejszą sesję bez zapisywania
-                </button>
-
-                <button type="button" id="modal-cancel-btn"
-                    class="w-full h-11 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium text-sm rounded-xl transition-all">
-                    Anuluj
-                </button>
-            </div>
+        <!-- Sterowanie stoperem -->
+        <div class="flex items-center gap-1.5">
+          <button id="btnToggleTimer" class="px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-xs font-bold text-white shadow-md shadow-brand-600/30 transition">
+            Start
+          </button>
+          <button id="btnAdd30s" class="px-2.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-xs font-semibold text-slate-300 border border-slate-700">
+            +30s
+          </button>
+          <button id="btnResetTimer" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-400 border border-slate-700" title="Resetuj">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          </button>
         </div>
+      </div>
+
+      <!-- Presety czasu odpoczynku -->
+      <div class="grid grid-cols-4 gap-1.5 mt-2.5">
+        <button data-seconds="60" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">60s</button>
+        <button data-seconds="90" class="btn-preset active py-1 text-xs rounded-lg bg-brand-600/20 text-brand-400 font-bold border border-brand-500/40 active:scale-95">90s</button>
+        <button data-seconds="120" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">120s</button>
+        <button data-seconds="180" class="btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95">180s</button>
+      </div>
+    </section>
+
+    <!-- AKTYWNY PLAN TRENINGOWY (WIDGET POSTĘPU) -->
+    <section id="activePlanWidget" class="hidden bg-slate-900/80 border border-brand-500/30 rounded-2xl p-3.5 shadow-lg">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-xs font-bold text-brand-400 flex items-center gap-1.5">
+          <span>🎯</span> <span id="activePlanTitle">Plan Treningowy</span>
+        </span>
+        <button id="btnCloseActivePlan" class="text-[11px] text-slate-400 hover:text-slate-200">Zwiń</button>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-1.5 mb-2 overflow-hidden">
+        <div id="planProgressBar" class="bg-brand-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
+      </div>
+      <div id="activePlanExercises" class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5"></div>
+    </section>
+
+    <!-- FORMULARZ DODAWANIA SERII -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl shadow-black/50">
+      <form id="setForm" onsubmit="return false;" class="space-y-3.5">
+        
+        <!-- Wybór / Wpisanie ćwiczenia -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Ćwiczenie</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="exerciseInput" 
+              list="commonExercises" 
+              placeholder="np. Wyciskanie sztangi leżąc" 
+              autocomplete="off"
+              class="w-full bg-slate-950 border border-slate-700/80 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-white rounded-xl px-3.5 py-3 text-sm font-medium placeholder-slate-500 transition outline-none"
+            >
+            <datalist id="commonExercises">
+              <option value="Wyciskanie sztangi leżąc">
+              <option value="Wyciskanie hantli skos dodatni">
+              <option value="Przysiad ze sztangą">
+              <option value="Martwy ciąg">
+              <option value="Podciąganie na drążku">
+              <option value="Wiosłowanie sztangą w opadzie">
+              <option value="Wyciskanie żołnierskie (OHP)">
+              <option value="Wznosy bokiem na barki">
+              <option value="Dipsy (pompki na poręczach)">
+              <option value="Uginanie ramion z hantlami">
+              <option value="Prostowanie ramion na wyciągu">
+            </datalist>
+          </div>
+
+          <!-- Szybkie chipy ćwiczeń -->
+          <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Wyciskanie</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Przysiad</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Martwy ciąg</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">Podciąganie</button>
+            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-slate-800/90 text-[11px] font-medium text-slate-300 whitespace-nowrap hover:bg-slate-700 border border-slate-700/50">OHP</button>
+          </div>
+        </div>
+
+        <!-- Pomiary: Ciężar i Powtórzenia w dwóch wygodnych kolumnach -->
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- Ciężar -->
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold text-slate-400">Ciężar (kg)</span>
+              <span class="text-[10px] text-slate-500 font-mono">krok 2.5</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">−</button>
+              <input 
+                type="number" 
+                step="0.5" 
+                id="weightInput" 
+                value="60" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 text-center text-lg font-mono font-bold text-white focus:border-brand-500 focus:outline-none"
+              >
+              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">+</button>
+            </div>
+          </div>
+
+          <!-- Powtórzenia -->
+          <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-2.5">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-semibold text-slate-400">Powtórzenia</span>
+              <span class="text-[10px] text-slate-500 font-mono">krok 1</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">−</button>
+              <input 
+                type="number" 
+                step="1" 
+                id="repsInput" 
+                value="8" 
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 text-center text-lg font-mono font-bold text-white focus:border-brand-500 focus:outline-none"
+              >
+              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 active:scale-90 text-lg font-bold text-slate-300 flex items-center justify-center transition border border-slate-700">+</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Duży główny przycisk dodawania serii -->
+        <button 
+          type="button" 
+          id="btnSaveSet" 
+          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 active:scale-[0.98] font-bold text-white text-base shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 transition"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+          Zapisz serię
+        </button>
+      </form>
+    </section>
+
+    <!-- LISTA ZAPISANYCH SERII DZISIAJ -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <h2 class="text-sm font-bold tracking-tight text-white uppercase tracking-wider">Dzisiejsza sesja</h2>
+          <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">0 serii</span>
+        </div>
+
+        <!-- Przełącznik widoku: Pogrupowane / Ostatnie -->
+        <div class="flex items-center bg-slate-900 border border-slate-800 p-0.5 rounded-lg text-[11px]">
+          <button id="viewGrouped" class="px-2 py-1 rounded font-semibold bg-brand-600 text-white transition">Grupy</button>
+          <button id="viewTimeline" class="px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition">Ostatnie</button>
+        </div>
+      </div>
+
+      <div id="workoutContainer" class="space-y-2.5">
+        <!-- Generowane dynamicznie -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: ZARZĄDZANIE PLANAMI TRENINGOWYMI -->
+  <div id="plansModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+        <h3 class="font-bold text-white text-sm">Plany Treningowe</h3>
+        <button id="btnClosePlans" class="text-slate-400 hover:text-white text-xl p-1 leading-none">&times;</button>
+      </div>
+
+      <div class="p-4 overflow-y-auto space-y-4 text-xs">
+        <div>
+          <span class="font-semibold text-slate-400 uppercase tracking-wider text-[10px] block mb-2">Gotowe szablony</span>
+          <div class="grid grid-cols-2 gap-2" id="templatesList"></div>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3">
+          <span class="font-semibold text-slate-400 uppercase tracking-wider text-[10px] block mb-1.5">Wklej własny plan (tekst)</span>
+          <p class="text-[11px] text-slate-500 mb-2">Wpisz ćwiczenia w osobnych linijkach, np.: <br><code class="text-slate-400">Przysiad ze sztangą | 4 | 8</code></p>
+          <input type="text" id="customPlanName" placeholder="Nazwa planu (np. Mój FBW)" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 mb-2 text-white outline-none focus:border-brand-500">
+          <textarea id="customPlanText" rows="4" placeholder="Wyciskanie leżąc | 4 | 8&#10;Przysiad | 4 | 8&#10;Wiosłowanie | 3 | 10" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:border-brand-500 font-mono text-[11px]"></textarea>
+          <button id="btnSaveCustomPlan" class="mt-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold border border-slate-700 transition">Zapisz i aktywuj plan</button>
+        </div>
+      </div>
     </div>
-
-    <!-- TOAST POWIADOMIENIA -->
-    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-zinc-800 text-zinc-100 border border-zinc-700 px-4 py-2.5 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-2 pointer-events-none opacity-0 transition-opacity duration-200">
-        <span class="w-2 h-2 rounded-full bg-lime-400"></span>
-        <span id="toast-msg">Zapisano serię</span>
-    </div>
-
-    <!-- LOGIKA APLIKACJI (Vanilla JS) -->
-    <script>
-        (function () {
-            'use strict';
-
-            // Klucze localStorage
-            const STORAGE_KEYS = {
-                CURRENT_SETS: 'gym_logger_current_sets_v1',
-                LAST_INPUTS: 'gym_logger_last_inputs_v1',
-                VIEW_MODE: 'gym_logger_view_mode_v1',
-                HISTORY: 'gym_logger_history_v1',
-                CUSTOM_PLANS: 'gym_logger_custom_plans_v1',
-                ACTIVE_PLAN_ID: 'gym_logger_active_plan_id_v1',
-                EXERCISE_WEIGHTS: 'gym_logger_exercise_weights_v1'
-            };
-
-            // Wbudowane gotowe szablony treningowe na start
-            const BUILTIN_PLANS = [
-                {
-                    id: 'builtin_fbw_a',
-                    name: 'FBW A (Full Body Workout)',
-                    builtin: true,
-                    exercises: [
-                        { name: 'Przysiad ze sztangą', targetSets: 3, targetReps: 8 },
-                        { name: 'Wyciskanie sztangi leżąc', targetSets: 3, targetReps: 8 },
-                        { name: 'Wiosłowanie sztangą', targetSets: 3, targetReps: 10 },
-                        { name: 'Wyciskanie żołnierskie (OHP)', targetSets: 3, targetReps: 10 },
-                        { name: 'Uginanie ramion z hantlami (Biceps)', targetSets: 2, targetReps: 12 }
-                    ]
-                },
-                {
-                    id: 'builtin_fbw_b',
-                    name: 'FBW B (Full Body Workout)',
-                    builtin: true,
-                    exercises: [
-                        { name: 'Martwy ciąg', targetSets: 3, targetReps: 6 },
-                        { name: 'Wyciskanie hantli na skosie', targetSets: 3, targetReps: 10 },
-                        { name: 'Podciąganie na drążku', targetSets: 3, targetReps: 8 },
-                        { name: 'Wykroki z hantlami', targetSets: 3, targetReps: 10 },
-                        { name: 'Prostowanie ramion na wyciągu (Triceps)', targetSets: 2, targetReps: 12 }
-                    ]
-                },
-                {
-                    id: 'builtin_push',
-                    name: 'Push (Klatka, Barki, Triceps)',
-                    builtin: true,
-                    exercises: [
-                        { name: 'Wyciskanie sztangi leżąc', targetSets: 4, targetReps: 8 },
-                        { name: 'Wyciskanie hantli na skosie', targetSets: 3, targetReps: 10 },
-                        { name: 'Wyciskanie żołnierskie (OHP)', targetSets: 3, targetReps: 8 },
-                        { name: 'Wznosy hantli bokiem', targetSets: 4, targetReps: 15 },
-                        { name: 'Pompki na poręczach (Dipy)', targetSets: 3, targetReps: 10 },
-                        { name: 'Prostowanie ramion na wyciągu (Triceps)', targetSets: 3, targetReps: 12 }
-                    ]
-                },
-                {
-                    id: 'builtin_pull',
-                    name: 'Pull (Plecy, Tył barku, Biceps)',
-                    builtin: true,
-                    exercises: [
-                        { name: 'Martwy ciąg', targetSets: 3, targetReps: 5 },
-                        { name: 'Podciąganie na drążku', targetSets: 4, targetReps: 8 },
-                        { name: 'Wiosłowanie sztangą', targetSets: 3, targetReps: 10 },
-                        { name: 'Ściąganie drążka wyciągu górnego', targetSets: 3, targetReps: 12 },
-                        { name: 'Uginanie ramion z hantlami (Biceps)', targetSets: 4, targetReps: 12 }
-                    ]
-                }
-            ];
-
-            // Domyślna baza najpopularniejszych ćwiczeń FBW / Siłownia po polsku
-            const DEFAULT_EXERCISES = [
-                'Wyciskanie sztangi leżąc',
-                'Przysiad ze sztangą',
-                'Martwy ciąg',
-                'Podciąganie na drążku',
-                'Wyciskanie żołnierskie (OHP)',
-                'Wiosłowanie sztangą',
-                'Wykroki z hantlami',
-                'Pompki na poręczach (Dipy)',
-                'Wyciskanie hantli na skosie',
-                'Ściąganie drążka wyciągu górnego',
-                'Hip Thrust ze sztangą',
-                'Wznosy hantli bokiem',
-                'Uginanie ramion z hantlami (Biceps)',
-                'Prostowanie ramion na wyciągu (Triceps)'
-            ];
-
-            // Stan aplikacji
-            let currentSets = [];
-            let workoutHistory = [];
-            let viewMode = 'grouped'; // 'grouped' | 'chrono'
-            let customPlans = [];
-            let activePlanId = null;
-            let exerciseWeightsMemory = {}; // Pamięć ostatniego ciężaru dla każdego ćwiczenia
-
-            // Stan stopera przerwy
-            let timerSeconds = 0;
-            let timerInterval = null;
-            let timerRunning = false;
-
-            // Referencje DOM
-            const currentDateEl = document.getElementById('current-date');
-            const statSetsEl = document.getElementById('stat-sets');
-            const statVolumeEl = document.getElementById('stat-volume');
-
-            const openPlansBtn = document.getElementById('open-plans-btn');
-            const quickLoadPlanBtn = document.getElementById('quick-load-plan-btn');
-            const noPlanBar = document.getElementById('no-plan-bar');
-            const activePlanBanner = document.getElementById('active-plan-banner');
-            const activePlanTitle = document.getElementById('active-plan-title');
-            const activePlanProgressBadge = document.getElementById('active-plan-progress-badge');
-            const activePlanProgressBar = document.getElementById('active-plan-progress-bar');
-            const activePlanExercises = document.getElementById('active-plan-exercises');
-            const nextPlanExerciseBtn = document.getElementById('next-plan-exercise-btn');
-            const changePlanBtn = document.getElementById('change-plan-btn');
-            const unloadPlanBtn = document.getElementById('unload-plan-btn');
-
-            const plansModal = document.getElementById('plans-modal');
-            const closePlansModalBtn = document.getElementById('close-plans-modal-btn');
-            const planTabBtns = document.querySelectorAll('.plan-tab-btn');
-            const planTabList = document.getElementById('plan-tab-list');
-            const planTabCreate = document.getElementById('plan-tab-create');
-            const planTabBackup = document.getElementById('plan-tab-backup');
-            const plansListContainer = document.getElementById('plans-list-container');
-            const newPlanNameInput = document.getElementById('new-plan-name');
-            const newPlanTextInput = document.getElementById('new-plan-text');
-            const fillSamplePlanBtn = document.getElementById('fill-sample-plan-btn');
-            const planCreateError = document.getElementById('plan-create-error');
-            const saveCustomPlanBtn = document.getElementById('save-custom-plan-btn');
-            const copyPlansJsonBtn = document.getElementById('copy-plans-json-btn');
-            const downloadPlansJsonBtn = document.getElementById('download-plans-json-btn');
-            const importJsonFileInput = document.getElementById('import-json-file-input');
-            const importJsonTextarea = document.getElementById('import-json-textarea');
-            const importJsonBtn = document.getElementById('import-json-btn');
-
-            const setForm = document.getElementById('set-form');
-            const exerciseInput = document.getElementById('exercise-input');
-            const clearExerciseBtn = document.getElementById('clear-exercise-btn');
-            const exercisesDatalist = document.getElementById('exercises-datalist');
-            const exerciseChipsContainer = document.getElementById('exercise-chips');
-            const weightInput = document.getElementById('weight-input');
-            const repsInput = document.getElementById('reps-input');
-            const formError = document.getElementById('form-error');
-            const saveSetBtn = document.getElementById('save-set-btn');
-
-            const viewGroupedBtn = document.getElementById('view-grouped-btn');
-            const viewChronoBtn = document.getElementById('view-chrono-btn');
-            const setsContainer = document.getElementById('sets-container');
-            const workoutActions = document.getElementById('workout-actions');
-            const finishWorkoutBtn = document.getElementById('finish-workout-btn');
-
-            const historySection = document.getElementById('history-section');
-            const historyCountEl = document.getElementById('history-count');
-            const historyListEl = document.getElementById('history-list');
-            const clearHistoryBtn = document.getElementById('clear-history-btn');
-
-            const confirmModal = document.getElementById('confirm-modal');
-            const modalArchiveBtn = document.getElementById('modal-archive-btn');
-            const modalDeleteBtn = document.getElementById('modal-delete-btn');
-            const modalCancelBtn = document.getElementById('modal-cancel-btn');
-
-            const timerDisplay = document.getElementById('timer-display');
-            const timerToggleBtn = document.getElementById('timer-toggle-btn');
-            const timerResetBtn = document.getElementById('timer-reset-btn');
-            const timerIconPlay = document.getElementById('timer-icon-play');
-            const timerIconPause = document.getElementById('timer-icon-pause');
-
-            const toastEl = document.getElementById('toast');
-            const toastMsgEl = document.getElementById('toast-msg');
-            let toastTimeout = null;
-
-            // --- INICJALIZACJA ---
-            function init() {
-                renderCurrentDate();
-                loadFromStorage();
-                populateDatalist();
-                renderExerciseChips();
-                renderActivePlanBanner();
-                updateViewModeButtons();
-                renderSets();
-                renderHistory();
-                setupEventListeners();
-            }
-
-            function renderCurrentDate() {
-                const now = new Date();
-                const formatted = now.toLocaleDateString('pl-PL', {
-                    weekday: 'short',
-                    day: '2-digit',
-                    month: '2-digit'
-                });
-                currentDateEl.textContent = formatted;
-            }
-
-            // --- OBSŁUGA LOCALSTORAGE ---
-            function loadFromStorage() {
-                try {
-                    const savedSets = localStorage.getItem(STORAGE_KEYS.CURRENT_SETS);
-                    if (savedSets) {
-                        currentSets = JSON.parse(savedSets);
-                    }
-
-                    const savedCustomPlans = localStorage.getItem(STORAGE_KEYS.CUSTOM_PLANS);
-                    if (savedCustomPlans) {
-                        customPlans = JSON.parse(savedCustomPlans);
-                    }
-
-                    const savedActivePlanId = localStorage.getItem(STORAGE_KEYS.ACTIVE_PLAN_ID);
-                    if (savedActivePlanId) {
-                        activePlanId = savedActivePlanId;
-                    }
-
-                    const savedWeights = localStorage.getItem(STORAGE_KEYS.EXERCISE_WEIGHTS);
-                    if (savedWeights) {
-                        exerciseWeightsMemory = JSON.parse(savedWeights);
-                    }
-
-                    const savedLast = localStorage.getItem(STORAGE_KEYS.LAST_INPUTS);
-                    if (savedLast) {
-                        const last = JSON.parse(savedLast);
-                        exerciseInput.value = last.exercise || 'Wyciskanie sztangi leżąc';
-                        weightInput.value = last.weight !== undefined ? last.weight : 60;
-                        repsInput.value = last.reps !== undefined ? last.reps : 8;
-                    } else {
-                        // Wartości startowe przy pierwszym uruchomieniu
-                        exerciseInput.value = 'Wyciskanie sztangi leżąc';
-                        weightInput.value = 60;
-                        repsInput.value = 8;
-                    }
-
-                    const savedView = localStorage.getItem(STORAGE_KEYS.VIEW_MODE);
-                    if (savedView === 'grouped' || savedView === 'chrono') {
-                        viewMode = savedView;
-                    }
-
-                    const savedHistory = localStorage.getItem(STORAGE_KEYS.HISTORY);
-                    if (savedHistory) {
-                        workoutHistory = JSON.parse(savedHistory);
-                    }
-                } catch (e) {
-                    console.error('Błąd odczytu danych z localStorage:', e);
-                }
-                toggleClearExerciseButton();
-            }
-
-            function saveSetsToStorage() {
-                try {
-                    localStorage.setItem(STORAGE_KEYS.CURRENT_SETS, JSON.stringify(currentSets));
-                } catch (e) {
-                    console.error('Błąd zapisu serii w localStorage:', e);
-                }
-            }
-
-            function saveLastInputsToStorage(exercise, weight, reps) {
-                try {
-                    localStorage.setItem(
-                        STORAGE_KEYS.LAST_INPUTS,
-                        JSON.stringify({ exercise, weight, reps })
-                    );
-                    if (exercise) {
-                        exerciseWeightsMemory[exercise.trim().toLowerCase()] = weight;
-                        localStorage.setItem(STORAGE_KEYS.EXERCISE_WEIGHTS, JSON.stringify(exerciseWeightsMemory));
-                    }
-                } catch (e) {
-                    console.error('Błąd zapisu ostatnich wartości:', e);
-                }
-            }
-
-            function saveCustomPlansToStorage() {
-                try {
-                    localStorage.setItem(STORAGE_KEYS.CUSTOM_PLANS, JSON.stringify(customPlans));
-                } catch (e) {
-                    console.error('Błąd zapisu własnych planów:', e);
-                }
-            }
-
-            function saveActivePlanIdToStorage() {
-                try {
-                    if (activePlanId) {
-                        localStorage.setItem(STORAGE_KEYS.ACTIVE_PLAN_ID, activePlanId);
-                    } else {
-                        localStorage.removeItem(STORAGE_KEYS.ACTIVE_PLAN_ID);
-                    }
-                } catch (e) {
-                    console.error('Błąd zapisu aktywnego planu:', e);
-                }
-            }
-
-            function saveHistoryToStorage() {
-                try {
-                    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(workoutHistory));
-                } catch (e) {
-                    console.error('Błąd zapisu historii:', e);
-                }
-            }
-
-            // --- OBSŁUGA PLANÓW TRENINGOWYCH ---
-            function getAllPlans() {
-                return [...customPlans, ...BUILTIN_PLANS];
-            }
-
-            function getActivePlan() {
-                if (!activePlanId) return null;
-                return getAllPlans().find(p => p.id === activePlanId) || null;
-            }
-
-            function countTodaySetsForExercise(exerciseName) {
-                const target = exerciseName.trim().toLowerCase();
-                return currentSets.filter(s => s.exercise.trim().toLowerCase() === target).length;
-            }
-
-            function renderActivePlanBanner() {
-                const plan = getActivePlan();
-                if (!plan) {
-                    activePlanBanner.classList.add('hidden');
-                    noPlanBar.classList.remove('hidden');
-                    return;
-                }
-
-                noPlanBar.classList.add('hidden');
-                activePlanBanner.classList.remove('hidden');
-                activePlanTitle.textContent = plan.name;
-
-                const currentExerciseVal = exerciseInput.value.trim().toLowerCase();
-                let totalTargetSets = 0;
-                let completedTargetSets = 0;
-
-                const itemsHtml = plan.exercises.map((ex, idx) => {
-                    const doneSets = countTodaySetsForExercise(ex.name);
-                    const targetSets = ex.targetSets || 3;
-                    const targetReps = ex.targetReps || 8;
-
-                    totalTargetSets += targetSets;
-                    completedTargetSets += Math.min(doneSets, targetSets);
-
-                    const isCompleted = doneSets >= targetSets;
-                    const isSelected = ex.name.trim().toLowerCase() === currentExerciseVal;
-
-                    let rowClasses = 'bg-zinc-950/75 border-zinc-800/90 text-zinc-200 hover:border-zinc-700';
-                    if (isSelected) {
-                        rowClasses = 'bg-lime-400/15 border-lime-400 text-white ring-1 ring-lime-400/40';
-                    } else if (isCompleted) {
-                        rowClasses = 'bg-zinc-950/40 border-zinc-800/50 text-zinc-400';
-                    }
-
-                    const statusBadge = isCompleted
-                        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-lime-400/20 text-lime-400 font-mono text-xs font-bold border border-lime-400/30">
-                               <svg class="w-3.5 h-3.5 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                               </svg>
-                               ${doneSets}/${targetSets}
-                           </span>`
-                        : `<span class="px-2 py-0.5 rounded-lg bg-zinc-900 text-zinc-300 font-mono text-xs font-bold border border-zinc-800">
-                               ${doneSets}/${targetSets} s.
-                           </span>`;
-
-                    return `
-                        <button type="button" data-plan-exercise-idx="${idx}"
-                            class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-left transition-all active-press ${rowClasses}">
-                            <div class="min-w-0 flex-1 flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-md bg-zinc-900 border border-zinc-800 text-[11px] font-mono font-bold text-zinc-400 flex items-center justify-center shrink-0">
-                                    ${idx + 1}
-                                </span>
-                                <div class="min-w-0">
-                                    <span class="block text-xs font-bold truncate ${isCompleted && !isSelected ? 'line-through text-zinc-400' : ''}">
-                                        ${escapeHtml(ex.name)}
-                                    </span>
-                                    <span class="block text-[10px] font-mono text-zinc-400">
-                                        Cel: ${targetSets} serie × ${targetReps} powt.
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="shrink-0 flex items-center gap-1.5">
-                                ${statusBadge}
-                            </div>
-                        </button>
-                    `;
-                }).join('');
-
-                activePlanExercises.innerHTML = itemsHtml;
-                activePlanProgressBadge.textContent = `${completedTargetSets}/${totalTargetSets} serii`;
-                const pct = totalTargetSets > 0 ? Math.min(100, Math.round((completedTargetSets / totalTargetSets) * 100)) : 0;
-                activePlanProgressBar.style.width = `${pct}%`;
-            }
-
-            function loadPlanById(planId) {
-                const plan = getAllPlans().find(p => p.id === planId);
-                if (!plan) return;
-
-                activePlanId = plan.id;
-                saveActivePlanIdToStorage();
-
-                // Wybierz pierwsze nieukończone ćwiczenie z planu (lub pierwsze na liście)
-                const firstIncomplete = plan.exercises.find(ex => countTodaySetsForExercise(ex.name) < (ex.targetSets || 3)) || plan.exercises[0];
-                if (firstIncomplete) {
-                    selectExercise(firstIncomplete.name, firstIncomplete.targetReps);
-                }
-
-                populateDatalist();
-                renderExerciseChips();
-                renderActivePlanBanner();
-                closePlansModal();
-                showToast(`Wczytano plan: ${plan.name}`);
-            }
-
-            function selectNextPlanExercise() {
-                const plan = getActivePlan();
-                if (!plan || !plan.exercises.length) return;
-
-                const currentName = exerciseInput.value.trim().toLowerCase();
-                const currentIndex = plan.exercises.findIndex(e => e.name.trim().toLowerCase() === currentName);
-
-                // Szukaj kolejnego nieukończonego ćwiczenia po aktualnym
-                for (let i = 1; i <= plan.exercises.length; i++) {
-                    const candidate = plan.exercises[(currentIndex + i) % plan.exercises.length];
-                    if (countTodaySetsForExercise(candidate.name) < (candidate.targetSets || 3)) {
-                        selectExercise(candidate.name, candidate.targetReps);
-                        showToast(`Ćwiczenie: ${candidate.name}`);
-                        return;
-                    }
-                }
-
-                // Jeśli wszystkie ukończone, przejdź po prostu do następnego z listy
-                const next = plan.exercises[(currentIndex + 1) % plan.exercises.length];
-                selectExercise(next.name, next.targetReps);
-                showToast(`Wszystkie serie z planu wykonane!`);
-            }
-
-            function parsePlanText(rawText) {
-                const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                const exercises = [];
-
-                lines.forEach(line => {
-                    // Obsługa formatu: "Ćwiczenie | 4 | 8" lub "Ćwiczenie ; 4 ; 8"
-                    if (line.includes('|') || line.includes(';')) {
-                        const sep = line.includes('|') ? '|' : ';';
-                        const parts = line.split(sep).map(p => p.trim());
-                        const name = parts[0];
-                        const targetSets = parseInt(parts[1], 10) || 3;
-                        const targetReps = parseInt(parts[2], 10) || 8;
-                        if (name) {
-                            exercises.push({ name, targetSets, targetReps });
-                        }
-                        return;
-                    }
-
-                    // Obsługa formatu: "Wyciskanie sztangi 4x8" lub "Wyciskanie sztangi - 4 x 10"
-                    const match = line.match(/^(.*?)[-\s:]+(\d+)\s*[xX*×]\s*(\d+)\s*$/);
-                    if (match && match[1].trim()) {
-                        exercises.push({
-                            name: match[1].trim(),
-                            targetSets: parseInt(match[2], 10) || 3,
-                            targetReps: parseInt(match[3], 10) || 8
-                        });
-                        return;
-                    }
-
-                    // Zwykła nazwa ćwiczenia w linii
-                    const cleanName = line.replace(/^[-*•\d.)+\s]+/, '').trim();
-                    if (cleanName) {
-                        exercises.push({
-                            name: cleanName,
-                            targetSets: 3,
-                            targetReps: 8
-                        });
-                    }
-                });
-
-                return exercises;
-            }
-
-            function renderPlansListInModal() {
-                const allPlans = getAllPlans();
-                plansListContainer.innerHTML = allPlans.map(plan => {
-                    const isActive = plan.id === activePlanId;
-                    const exercisesPills = plan.exercises.map(ex =>
-                        `<span class="inline-block text-[11px] bg-zinc-900 border border-zinc-800 text-zinc-300 px-2 py-0.5 rounded-lg">
-                            ${escapeHtml(ex.name)} <strong class="text-lime-400 font-mono">${ex.targetSets}×${ex.targetReps}</strong>
-                        </span>`
-                    ).join(' ');
-
-                    return `
-                        <div class="bg-zinc-950/90 border ${isActive ? 'border-lime-400' : 'border-zinc-800'} rounded-2xl p-3.5 space-y-2.5">
-                            <div class="flex items-start justify-between gap-2">
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <h4 class="text-sm font-extrabold text-white">${escapeHtml(plan.name)}</h4>
-                                        ${plan.builtin
-                                            ? '<span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">Szablon</span>'
-                                            : '<span class="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-lime-400/15 text-lime-400 border border-lime-400/30">Własny</span>'
-                                        }
-                                    </div>
-                                    <p class="text-[11px] text-zinc-400 mt-0.5">${plan.exercises.length} ćwiczeń w planie</p>
-                                </div>
-                                <div class="flex items-center gap-1.5 shrink-0">
-                                    ${!plan.builtin ? `
-                                        <button type="button" data-delete-plan-id="${plan.id}" title="Usuń własny plan"
-                                            class="w-9 h-9 rounded-xl bg-zinc-900 hover:bg-red-950/70 text-zinc-400 hover:text-red-300 border border-zinc-800 flex items-center justify-center transition-all">
-                                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
-                                    ` : ''}
-                                    <button type="button" data-load-plan-id="${plan.id}"
-                                        class="h-9 px-3.5 rounded-xl font-extrabold text-xs transition-all active-press ${isActive ? 'bg-zinc-800 text-lime-400 border border-lime-400/40' : 'bg-lime-400 hover:bg-lime-300 text-zinc-950'}">
-                                        ${isActive ? 'Aktywny ✓' : 'Wczytaj plan'}
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="flex flex-wrap gap-1 pt-0.5">
-                                ${exercisesPills}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            function switchPlanModalTab(tabName) {
-                planTabBtns.forEach(btn => {
-                    const isMatch = btn.getAttribute('data-plan-tab') === tabName;
-                    btn.className = isMatch
-                        ? 'plan-tab-btn py-2 rounded-lg bg-zinc-800 text-lime-400 transition-all'
-                        : 'plan-tab-btn py-2 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all';
-                });
-
-                planTabList.classList.toggle('hidden', tabName !== 'list');
-                planTabCreate.classList.toggle('hidden', tabName !== 'create');
-                planTabBackup.classList.toggle('hidden', tabName !== 'backup');
-
-                if (tabName === 'list') {
-                    renderPlansListInModal();
-                }
-            }
-
-            function openPlansModal(defaultTab = 'list') {
-                switchPlanModalTab(defaultTab);
-                plansModal.classList.remove('hidden');
-                plansModal.classList.add('flex');
-            }
-
-            function closePlansModal() {
-                plansModal.classList.add('hidden');
-                plansModal.classList.remove('flex');
-            }
-
-            // --- CHIPY ĆWICZEŃ I DATALIST ---
-            function getCombinedExercisesList() {
-                const activePlan = getActivePlan();
-                const planExercises = activePlan ? activePlan.exercises.map(e => e.name) : [];
-                const recentFromToday = [...new Set(currentSets.map(s => s.exercise))];
-                const combined = [...planExercises];
-
-                recentFromToday.forEach(ex => {
-                    if (!combined.some(item => item.toLowerCase() === ex.toLowerCase())) {
-                        combined.push(ex);
-                    }
-                });
-
-                DEFAULT_EXERCISES.forEach(ex => {
-                    if (!combined.some(item => item.toLowerCase() === ex.toLowerCase())) {
-                        combined.push(ex);
-                    }
-                });
-                return combined;
-            }
-
-            function populateDatalist() {
-                const list = getCombinedExercisesList();
-                exercisesDatalist.innerHTML = list
-                    .map(ex => `<option value="${escapeHtml(ex)}"></option>`)
-                    .join('');
-            }
-
-            function renderExerciseChips() {
-                const list = getCombinedExercisesList().slice(0, 10);
-                const currentVal = exerciseInput.value.trim().toLowerCase();
-
-                exerciseChipsContainer.innerHTML = list.map(ex => {
-                    const isSelected = ex.toLowerCase() === currentVal;
-                    const activeClasses = isSelected
-                        ? 'bg-lime-400 text-zinc-950 border-lime-400 font-bold'
-                        : 'bg-zinc-950 text-zinc-300 border-zinc-800 hover:border-zinc-700';
-
-                    return `
-                        <button type="button" data-chip-exercise="${escapeHtml(ex)}"
-                            class="px-3 py-1.5 rounded-xl text-xs border whitespace-nowrap transition-all active-press select-none ${activeClasses}">
-                            ${escapeHtml(ex)}
-                        </button>
-                    `;
-                }).join('');
-            }
-
-            function selectExercise(exerciseName, suggestedReps) {
-                exerciseInput.value = exerciseName;
-                toggleClearExerciseButton();
-
-                const lowerName = exerciseName.trim().toLowerCase();
-
-                // 1. Sprawdź czy w dzisiejszej sesji było już wykonywane to ćwiczenie
-                const lastSetForExercise = [...currentSets]
-                    .reverse()
-                    .find(s => s.exercise.trim().toLowerCase() === lowerName);
-
-                if (lastSetForExercise) {
-                    weightInput.value = lastSetForExercise.weight;
-                    repsInput.value = suggestedReps !== undefined ? suggestedReps : lastSetForExercise.reps;
-                } else {
-                    // 2. Jeśli nie dzisiaj, sprawdź zapisany wcześniej ciężar dla tego ćwiczenia w pamięci
-                    if (exerciseWeightsMemory[lowerName] !== undefined) {
-                        weightInput.value = exerciseWeightsMemory[lowerName];
-                    }
-                    // 3. Jeśli podano docelowe powtórzenia z planu (lub ćwiczenie jest w aktywnym planie), ustaw je
-                    if (suggestedReps !== undefined) {
-                        repsInput.value = suggestedReps;
-                    } else {
-                        const plan = getActivePlan();
-                        if (plan) {
-                            const foundInPlan = plan.exercises.find(e => e.name.trim().toLowerCase() === lowerName);
-                            if (foundInPlan && foundInPlan.targetReps) {
-                                repsInput.value = foundInPlan.targetReps;
-                            }
-                        }
-                    }
-                }
-
-                renderExerciseChips();
-                renderActivePlanBanner();
-            }
-
-            function toggleClearExerciseButton() {
-                if (exerciseInput.value.trim().length > 0) {
-                    clearExerciseBtn.classList.remove('hidden');
-                } else {
-                    clearExerciseBtn.classList.add('hidden');
-                }
-            }
-
-            // --- DODAWANIE I USUWANIE SERII ---
-            function handleAddSet(e) {
-                e.preventDefault();
-                formError.classList.add('hidden');
-
-                const exercise = exerciseInput.value.trim();
-                const weightStr = String(weightInput.value).replace(',', '.');
-                const weight = parseFloat(weightStr);
-                const reps = parseInt(repsInput.value, 10);
-
-                if (!exercise) {
-                    showFormError('Wpisz lub wybierz nazwę ćwiczenia.');
-                    exerciseInput.focus();
-                    return;
-                }
-                if (isNaN(weight) || weight < 0) {
-                    showFormError('Podaj prawidłowy ciężar (minimum 0 kg).');
-                    weightInput.focus();
-                    return;
-                }
-                if (isNaN(reps) || reps < 1) {
-                    showFormError('Podaj liczbę powtórzeń (minimum 1).');
-                    repsInput.focus();
-                    return;
-                }
-
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('pl-PL', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-
-                const newSet = {
-                    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
-                    exercise,
-                    weight: Math.round(weight * 100) / 100,
-                    reps,
-                    timestamp: Date.now(),
-                    time: timeString
-                };
-
-                currentSets.push(newSet);
-                saveSetsToStorage();
-                saveLastInputsToStorage(exercise, newSet.weight, newSet.reps);
-
-                // Ergonomia: zachowaj wpisane wartości w formularzu dla kolejnej serii
-                exerciseInput.value = exercise;
-                weightInput.value = newSet.weight;
-                repsInput.value = newSet.reps;
-
-                populateDatalist();
-                renderExerciseChips();
-                renderActivePlanBanner();
-                renderSets();
-
-                // Automatycznie zresetuj i uruchom stoper przerwy
-                resetAndStartTimer();
-
-                // Krótki komunikat potwierdzający
-                showToast(`Zapisano: ${ newSet.weight } kg × ${ newSet.reps } powt.`);
-            }
-
-            function deleteSetById(setId) {
-                const index = currentSets.findIndex(s => s.id === setId);
-                if (index !== -1) {
-                    const removed = currentSets[index];
-                    currentSets.splice(index, 1);
-                    saveSetsToStorage();
-                    renderExerciseChips();
-                    renderActivePlanBanner();
-                    renderSets();
-                    showToast(`Usunięto serię (${removed.exercise})`);
-                }
-            }
-
-            function showFormError(msg) {
-                formError.textContent = msg;
-                formError.classList.remove('hidden');
-            }
-
-            // --- RENDEROWANIE WIDOKU BIEŻĄCEGO TRENINGU ---
-            function renderSets() {
-                // Aktualizacja statystyk w nagłówku
-                const totalSets = currentSets.length;
-                const totalVolume = currentSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
-
-                statSetsEl.textContent = totalSets;
-                statVolumeEl.textContent = `${formatNumber(totalVolume)} kg`;
-
-                if (totalSets === 0) {
-                    workoutActions.classList.add('hidden');
-                    setsContainer.innerHTML = `
-                        <div class="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl p-8 text-center space-y-2">
-                            <div class="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 mx-auto flex items-center justify-center text-zinc-500">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                            </div>
-                            <p class="text-sm font-semibold text-zinc-300">Brak zapisanych serii podczas dzisiejszego treningu</p>
-                            <p class="text-xs text-zinc-500">Wybierz ćwiczenie powyżej i kliknij „Zapisz serię”, aby rozpocząć.</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                workoutActions.classList.remove('hidden');
-
-                if (viewMode === 'grouped') {
-                    renderGroupedSets();
-                } else {
-                    renderChronologicalSets();
-                }
-            }
-
-            function renderGroupedSets() {
-                // Grupowanie według ćwiczeń z zachowaniem kolejności dodawania (najnowsze aktywne grupy na górze)
-                const groupsMap = new Map();
-
-                currentSets.forEach(set => {
-                    const key = set.exercise.trim();
-                    if (!groupsMap.has(key)) {
-                        groupsMap.set(key, []);
-                    }
-                    groupsMap.get(key).push(set);
-                });
-
-                // Odwracamy kolejność grup tak, aby ostatnio wykonywane ćwiczenie było na samej górze
-                const groupsArray = Array.from(groupsMap.entries()).reverse();
-
-                setsContainer.innerHTML = groupsArray.map(([exerciseName, sets]) => {
-                    const groupVolume = sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
-
-                    const rowsHtml = sets.map((s, idx) => `
-                        <div class="flex items-center justify-between py-2.5 px-3 rounded-xl bg-zinc-950/60 border border-zinc-800/60 animate-entry">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-zinc-900 text-zinc-400 border border-zinc-800">
-                                    Seria ${idx + 1}
-                                </span>
-                                <span class="font-mono text-base font-bold text-white">
-                                    ${formatNumber(s.weight)} <span class="text-xs font-normal text-zinc-400">kg</span>
-                                    <span class="text-lime-400 mx-1">×</span>
-                                    ${s.reps} <span class="text-xs font-normal text-zinc-400">powt.</span>
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[11px] font-mono text-zinc-500">${s.time || ''}</span>
-                                <button type="button" data-delete-id="${s.id}" title="Usuń tę serię" aria-label="Usuń serię ${idx + 1}"
-                                    class="w-9 h-9 rounded-lg bg-zinc-900 hover:bg-red-950/80 text-zinc-400 hover:text-red-400 active:scale-95 flex items-center justify-center transition-all border border-zinc-800/80">
-                                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    return `
-                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3.5 space-y-2.5 shadow-md">
-                            <div class="flex items-center justify-between gap-2 pb-1 border-b border-zinc-800/80">
-                                <button type="button" data-select-exercise="${escapeHtml(exerciseName)}"
-                                    class="text-left group flex items-center gap-2 focus:outline-none">
-                                    <h3 class="text-sm font-extrabold text-zinc-100 group-hover:text-lime-400 transition-colors">
-                                        ${escapeHtml(exerciseName)}
-                                    </h3>
-                                    <span class="text-[10px] font-semibold text-zinc-500 bg-zinc-950 px-1.5 py-0.5 rounded border border-zinc-800 group-hover:border-lime-400/40">
-                                        Wybierz
-                                    </span>
-                                </button>
-                                <span class="text-xs font-mono text-zinc-400 shrink-0">
-                                    ${sets.length} ${sets.length === 1 ? 'seria' : (sets.length < 5 ? 'serie' : 'serii')} • <strong class="text-zinc-200">${formatNumber(groupVolume)} kg</strong>
-                                </span>
-                            </div>
-                            <div class="space-y-1.5">
-                                ${rowsHtml}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            function renderChronologicalSets() {
-                // Obliczamy który to numer serii dla danego ćwiczenia
-                const exerciseCounters = {};
-                const setsWithSequence = currentSets.map(s => {
-                    const key = s.exercise.trim();
-                    exerciseCounters[key] = (exerciseCounters[key] || 0) + 1;
-                    return {
-                        ...s,
-                        setNumberForExercise: exerciseCounters[key]
-                    };
-                });
-
-                // Wyświetlamy od najnowszej do najstarszej
-                const reversed = [...setsWithSequence].reverse();
-
-                setsContainer.innerHTML = reversed.map(s => `
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-3 flex items-center justify-between gap-3 animate-entry">
-                        <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2">
-                                <button type="button" data-select-exercise="${escapeHtml(s.exercise)}"
-                                    class="text-xs font-bold text-zinc-300 hover:text-lime-400 truncate text-left">
-                                    ${escapeHtml(s.exercise)}
-                                </button>
-                                <span class="text-[11px] font-mono text-zinc-500">• ${s.time || ''}</span>
-                            </div>
-                            <div class="mt-1 flex items-center gap-2">
-                                <span class="text-xs font-bold text-zinc-400 bg-zinc-950 px-2 py-0.5 rounded-md border border-zinc-800">
-                                    Seria ${s.setNumberForExercise}:
-                                </span>
-                                <span class="font-mono text-base font-bold text-white">
-                                    ${formatNumber(s.weight)} kg <span class="text-lime-400">×</span> ${s.reps} powt.
-                                </span>
-                            </div>
-                        </div>
-                        <button type="button" data-delete-id="${s.id}" title="Usuń serię" aria-label="Usuń serię"
-                            class="w-10 h-10 rounded-xl bg-zinc-950 hover:bg-red-950/80 text-zinc-400 hover:text-red-400 active:scale-95 flex items-center justify-center transition-all border border-zinc-800 shrink-0">
-                            <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                        </button>
-                    </div>
-                `).join('');
-            }
-
-            function updateViewModeButtons() {
-                if (viewMode === 'grouped') {
-                    viewGroupedBtn.className = 'px-2.5 py-1.5 rounded-lg bg-zinc-800 text-lime-400 transition-all';
-                    viewChronoBtn.className = 'px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all';
-                } else {
-                    viewChronoBtn.className = 'px-2.5 py-1.5 rounded-lg bg-zinc-800 text-lime-400 transition-all';
-                    viewGroupedBtn.className = 'px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 transition-all';
-                }
-            }
-
-            // --- ARCHIWUM / HISTORIA TRENINGÓW ---
-            function renderHistory() {
-                if (!workoutHistory || workoutHistory.length === 0) {
-                    historySection.classList.add('hidden');
-                    return;
-                }
-
-                historySection.classList.remove('hidden');
-                historyCountEl.textContent = workoutHistory.length;
-
-                historyListEl.innerHTML = workoutHistory.map(item => {
-                    const exercisesSummary = item.exercises
-                        .map(ex => `<span class="inline-block bg-zinc-900 border border-zinc-800 rounded-md px-2 py-0.5 text-[11px] text-zinc-300">${escapeHtml(ex.name)} (${ex.setsCount}s)</span>`)
-                        .join(' ');
-
-                    return `
-                        <div class="bg-zinc-950/80 border border-zinc-800/80 rounded-xl p-3 space-y-1.5">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="font-bold text-zinc-200">${escapeHtml(item.dateLabel)}</span>
-                                <span class="font-mono text-lime-400 font-semibold">${item.totalSets} serii • ${formatNumber(item.totalVolume)} kg</span>
-                            </div>
-                            <div class="flex flex-wrap gap-1">
-                                ${exercisesSummary}
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            function archiveAndClearSession() {
-                if (currentSets.length > 0) {
-                    const totalSets = currentSets.length;
-                    const totalVolume = currentSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
-
-                    const countsMap = new Map();
-                    currentSets.forEach(s => {
-                        countsMap.set(s.exercise, (countsMap.get(s.exercise) || 0) + 1);
-                    });
-
-                    const exercises = Array.from(countsMap.entries()).map(([name, setsCount]) => ({
-                        name,
-                        setsCount
-                    }));
-
-                    const now = new Date();
-                    const dateLabel = now.toLocaleDateString('pl-PL', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-
-                    workoutHistory.unshift({
-                        id: Date.now().toString(),
-                        dateLabel,
-                        totalSets,
-                        totalVolume,
-                        exercises
-                    });
-
-                    // Zachowaj maksymalnie 20 ostatnich sesji
-                    workoutHistory = workoutHistory.slice(0, 20);
-                    saveHistoryToStorage();
-                }
-
-                currentSets = [];
-                saveSetsToStorage();
-                stopAndResetTimer();
-                renderSets();
-                renderHistory();
-                renderExerciseChips();
-                renderActivePlanBanner();
-                closeConfirmModal();
-                showToast('Trening zapisany w historii');
-            }
-
-            function deleteSessionWithoutArchive() {
-                currentSets = [];
-                saveSetsToStorage();
-                stopAndResetTimer();
-                renderSets();
-                renderExerciseChips();
-                renderActivePlanBanner();
-                closeConfirmModal();
-                showToast('Wyczyszczono dzisiejszy trening');
-            }
-
-            // --- STOPER PRZERWY ---
-            function updateTimerDisplay() {
-                const mins = Math.floor(timerSeconds / 60);
-                const secs = timerSeconds % 60;
-                timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-            }
-
-            function resetAndStartTimer() {
-                timerSeconds = 0;
-                updateTimerDisplay();
-                if (!timerRunning) {
-                    startTimer();
-                }
-            }
-
-            function startTimer() {
-                if (timerRunning) return;
-                timerRunning = true;
-                timerIconPlay.classList.add('hidden');
-                timerIconPause.classList.remove('hidden');
-                timerDisplay.classList.add('text-lime-400');
-
-                timerInterval = setInterval(() => {
-                    timerSeconds++;
-                    updateTimerDisplay();
-                }, 1000);
-            }
-
-            function pauseTimer() {
-                timerRunning = false;
-                clearInterval(timerInterval);
-                timerIconPlay.classList.remove('hidden');
-                timerIconPause.classList.add('hidden');
-                timerDisplay.classList.remove('text-lime-400');
-            }
-
-            function stopAndResetTimer() {
-                pauseTimer();
-                timerSeconds = 0;
-                updateTimerDisplay();
-            }
-
-            // --- FUNKCJE POMOCNICZE UI ---
-            function openConfirmModal() {
-                confirmModal.classList.remove('hidden');
-                confirmModal.classList.add('flex');
-            }
-
-            function closeConfirmModal() {
-                confirmModal.classList.add('hidden');
-                confirmModal.classList.remove('flex');
-            }
-
-            function showToast(message) {
-                toastMsgEl.textContent = message;
-                toastEl.classList.remove('opacity-0');
-                toastEl.classList.add('opacity-100');
-
-                if (toastTimeout) clearTimeout(toastTimeout);
-                toastTimeout = setTimeout(() => {
-                    toastEl.classList.remove('opacity-100');
-                    toastEl.classList.add('opacity-0');
-                }, 2000);
-            }
-
-            function formatNumber(num) {
-                return Number.isInteger(num) ? num.toString() : num.toFixed(1).replace('.0', '');
-            }
-
-            function escapeHtml(str) {
-                return String(str)
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-            }
-
-            // --- NASŁUCHIWANIE ZDARZEŃ ---
-            function setupEventListeners() {
-                // Zapis serii
-                setForm.addEventListener('submit', handleAddSet);
-
-                // Automatyczne zaznaczanie zawartości pola przy dotknięciu (szybkie nadpisywanie)
-                [weightInput, repsInput].forEach(input => {
-                    input.addEventListener('focus', function () {
-                        setTimeout(() => this.select(), 20);
-                    });
-                });
-
-                exerciseInput.addEventListener('input', () => {
-                    toggleClearExerciseButton();
-                    renderExerciseChips();
-                    renderActivePlanBanner();
-                });
-
-                clearExerciseBtn.addEventListener('click', () => {
-                    exerciseInput.value = '';
-                    toggleClearExerciseButton();
-                    renderExerciseChips();
-                    renderActivePlanBanner();
-                    exerciseInput.focus();
-                });
-
-                // Kliknięcie w chip ćwiczenia
-                exerciseChipsContainer.addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-chip-exercise]');
-                    if (btn) {
-                        selectExercise(btn.getAttribute('data-chip-exercise'));
-                    }
-                });
-
-                // --- ZDARZENIA MODUŁU PLANÓW TRENINGOWYCH ---
-                openPlansBtn.addEventListener('click', () => openPlansModal('list'));
-                quickLoadPlanBtn.addEventListener('click', () => openPlansModal('list'));
-                changePlanBtn.addEventListener('click', () => openPlansModal('list'));
-                closePlansModalBtn.addEventListener('click', closePlansModal);
-
-                plansModal.addEventListener('click', (e) => {
-                    if (e.target === plansModal) closePlansModal();
-                });
-
-                planTabBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        switchPlanModalTab(btn.getAttribute('data-plan-tab'));
-                    });
-                });
-
-                // Kliknięcie na liście planów (Wczytaj lub Usuń własny plan)
-                plansListContainer.addEventListener('click', (e) => {
-                    const loadBtn = e.target.closest('[data-load-plan-id]');
-                    if (loadBtn) {
-                        loadPlanById(loadBtn.getAttribute('data-load-plan-id'));
-                        return;
-                    }
-
-                    const deleteBtn = e.target.closest('[data-delete-plan-id]');
-                    if (deleteBtn) {
-                        const delId = deleteBtn.getAttribute('data-delete-plan-id');
-                        customPlans = customPlans.filter(p => p.id !== delId);
-                        saveCustomPlansToStorage();
-                        if (activePlanId === delId) {
-                            activePlanId = null;
-                            saveActivePlanIdToStorage();
-                            renderActivePlanBanner();
-                        }
-                        renderPlansListInModal();
-                        showToast('Usunięto własny plan');
-                    }
-                });
-
-                // Kliknięcie ćwiczenia na widżecie Aktywnego Planu
-                activePlanExercises.addEventListener('click', (e) => {
-                    const rowBtn = e.target.closest('[data-plan-exercise-idx]');
-                    if (!rowBtn) return;
-                    const plan = getActivePlan();
-                    if (!plan) return;
-                    const idx = parseInt(rowBtn.getAttribute('data-plan-exercise-idx'), 10);
-                    const ex = plan.exercises[idx];
-                    if (ex) {
-                        selectExercise(ex.name, ex.targetReps);
-                        showToast(`Wybrano: ${ex.name} (${ex.targetReps} powt.)`);
-                    }
-                });
-
-                nextPlanExerciseBtn.addEventListener('click', selectNextPlanExercise);
-
-                unloadPlanBtn.addEventListener('click', () => {
-                    activePlanId = null;
-                    saveActivePlanIdToStorage();
-                    renderActivePlanBanner();
-                    renderExerciseChips();
-                    showToast('Wyłączono aktywny plan');
-                });
-
-                // Wstawienie przykładowej rozpiski tekstowej
-                fillSamplePlanBtn.addEventListener('click', () => {
-                    if (!newPlanNameInput.value.trim()) {
-                        newPlanNameInput.value = 'Góra / Dół - Góra A';
-                    }
-                    newPlanTextInput.value = [
-                        'Wyciskanie sztangi leżąc | 4 | 8',
-                        'Wiosłowanie sztangą | 4 | 10',
-                        'Wyciskanie żołnierskie (OHP) | 3 | 10',
-                        'Podciąganie na drążku | 3 | 8',
-                        'Wznosy hantli bokiem | 3 | 15',
-                        'Uginanie ramion z hantlami (Biceps) | 3 | 12'
-                    ].join('\n');
-                });
-
-                // Zapisanie nowego własnego planu z tekstu
-                saveCustomPlanBtn.addEventListener('click', () => {
-                    planCreateError.classList.add('hidden');
-                    const name = newPlanNameInput.value.trim();
-                    const rawText = newPlanTextInput.value.trim();
-
-                    if (!name) {
-                        planCreateError.textContent = 'Podaj nazwę swojego planu treningowego.';
-                        planCreateError.classList.remove('hidden');
-                        newPlanNameInput.focus();
-                        return;
-                    }
-
-                    const exercises = parsePlanText(rawText);
-                    if (exercises.length === 0) {
-                        planCreateError.textContent = 'Wpisz przynajmniej jedno ćwiczenie (jedno w każdej linii).';
-                        planCreateError.classList.remove('hidden');
-                        newPlanTextInput.focus();
-                        return;
-                    }
-
-                    const newPlan = {
-                        id: 'custom_' + Date.now().toString(36),
-                        name,
-                        builtin: false,
-                        exercises
-                    };
-
-                    customPlans.unshift(newPlan);
-                    saveCustomPlansToStorage();
-
-                    newPlanNameInput.value = '';
-                    newPlanTextInput.value = '';
-
-                    loadPlanById(newPlan.id);
-                });
-
-                // Eksport planów do schowka (z fallbackiem execCommand dla iFrame)
-                copyPlansJsonBtn.addEventListener('click', () => {
-                    const dataStr = JSON.stringify(customPlans.length ? customPlans : getAllPlans(), null, 2);
-                    const tempArea = document.createElement('textarea');
-                    tempArea.value = dataStr;
-                    document.body.appendChild(tempArea);
-                    tempArea.select();
-                    try {
-                        document.execCommand('copy');
-                        showToast('Skopiowano plany JSON do schowka');
-                    } catch (err) {
-                        showToast('Nie udało się skopiować');
-                    }
-                    document.body.removeChild(tempArea);
-                });
-
-                // Pobranie planów jako plik .json
-                downloadPlansJsonBtn.addEventListener('click', () => {
-                    const dataStr = JSON.stringify(customPlans.length ? customPlans : getAllPlans(), null, 2);
-                    const blob = new Blob([dataStr], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'plany-treningowe.json';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showToast('Pobrano plik plany-treningowe.json');
-                });
-
-                // Import planów z wklejonego JSON
-                function importPlansFromJsonString(jsonStr) {
-                    try {
-                        const parsed = JSON.parse(jsonStr);
-                        const list = Array.isArray(parsed) ? parsed : [parsed];
-                        let added = 0;
-
-                        list.forEach(item => {
-                            if (item && item.name && Array.isArray(item.exercises) && item.exercises.length > 0) {
-                                customPlans.unshift({
-                                    id: 'custom_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 5),
-                                    name: String(item.name).trim(),
-                                    builtin: false,
-                                    exercises: item.exercises.map(ex => ({
-                                        name: String(ex.name || 'Ćwiczenie').trim(),
-                                        targetSets: parseInt(ex.targetSets, 10) || 3,
-                                        targetReps: parseInt(ex.targetReps, 10) || 8
-                                    }))
-                                });
-                                added++;
-                            }
-                        });
-
-                        if (added > 0) {
-                            saveCustomPlansToStorage();
-                            importJsonTextarea.value = '';
-                            switchPlanModalTab('list');
-                            showToast(`Zaimportowano planów: ${added}`);
-                        } else {
-                            showToast('Nieprawidłowy format planu w JSON');
-                        }
-                    } catch (err) {
-                        showToast('Błąd składni JSON');
-                    }
-                }
-
-                importJsonBtn.addEventListener('click', () => {
-                    const val = importJsonTextarea.value.trim();
-                    if (!val) {
-                        showToast('Wklej najpierw kod JSON');
-                        return;
-                    }
-                    importPlansFromJsonString(val);
-                });
-
-                importJsonFileInput.addEventListener('change', (e) => {
-                    const file = e.target.files && e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        importPlansFromJsonString(ev.target.result);
-                        importJsonFileInput.value = '';
-                    };
-                    reader.readAsText(file);
-                });
-
-                // Przyciski krokowe +/- dla ciężaru
-                document.querySelectorAll('[data-step-weight]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const delta = parseFloat(btn.getAttribute('data-step-weight'));
-                        const current = parseFloat(String(weightInput.value).replace(',', '.')) || 0;
-                        const nextVal = Math.max(0, Math.round((current + delta) * 100) / 100);
-                        weightInput.value = nextVal;
-                    });
-                });
-
-                // Przyciski krokowe +/- dla powtórzeń
-                document.querySelectorAll('[data-step-reps]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const delta = parseInt(btn.getAttribute('data-step-reps'), 10);
-                        const current = parseInt(repsInput.value, 10) || 0;
-                        const nextVal = Math.max(1, current + delta);
-                        repsInput.value = nextVal;
-                    });
-                });
-
-                // Przełączanie trybu widoku (Pogrupowane / Chronologicznie)
-                viewGroupedBtn.addEventListener('click', () => {
-                    viewMode = 'grouped';
-                    localStorage.setItem(STORAGE_KEYS.VIEW_MODE, viewMode);
-                    updateViewModeButtons();
-                    renderSets();
-                });
-
-                viewChronoBtn.addEventListener('click', () => {
-                    viewMode = 'chrono';
-                    localStorage.setItem(STORAGE_KEYS.VIEW_MODE, viewMode);
-                    updateViewModeButtons();
-                    renderSets();
-                });
-
-                // Delegacja zdarzeń w liście serii (usuwanie serii + wybór ćwiczenia po kliknięciu w nagłówek karty)
-                setsContainer.addEventListener('click', (e) => {
-                    const deleteBtn = e.target.closest('[data-delete-id]');
-                    if (deleteBtn) {
-                        const id = deleteBtn.getAttribute('data-delete-id');
-                        deleteSetById(id);
-                        return;
-                    }
-
-                    const selectExBtn = e.target.closest('[data-select-exercise]');
-                    if (selectExBtn) {
-                        const exName = selectExBtn.getAttribute('data-select-exercise');
-                        selectExercise(exName);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                        showToast(`Wybrano: ${exName}`);
-                    }
-                });
-
-                // Stoper przerwy
-                timerToggleBtn.addEventListener('click', () => {
-                    if (timerRunning) {
-                        pauseTimer();
-                    } else {
-                        startTimer();
-                    }
-                });
-
-                timerResetBtn.addEventListener('click', () => {
-                    stopAndResetTimer();
-                });
-
-                // Modal zakończenia treningu
-                finishWorkoutBtn.addEventListener('click', openConfirmModal);
-                modalCancelBtn.addEventListener('click', closeConfirmModal);
-                modalArchiveBtn.addEventListener('click', archiveAndClearSession);
-                modalDeleteBtn.addEventListener('click', deleteSessionWithoutArchive);
-
-                confirmModal.addEventListener('click', (e) => {
-                    if (e.target === confirmModal) closeConfirmModal();
-                });
-
-                // Czyszczenie historii archiwalnej
-                clearHistoryBtn.addEventListener('click', () => {
-                    workoutHistory = [];
-                    saveHistoryToStorage();
-                    renderHistory();
-                    showToast('Wyczyszczono historię treningów');
-                });
-            }
-
-            // Start po załadowaniu DOM
-            document.addEventListener('DOMContentLoaded', init);
-        })();
-    </script>
+  </div>
+
+  <!-- JAVASCRIPT: LOGIKA APLIKACJI, STOPERA I ZAPISU -->
+  <script>
+    // --- BAZA DANYCH W LOCALSTORAGE ---
+    const STORAGE_KEY = 'gym_workout_sets_v2';
+    const ACTIVE_PLAN_KEY = 'gym_active_plan_v2';
+    const TIMER_PRESET_KEY = 'gym_timer_preset';
+
+    let sets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let activePlan = JSON.parse(localStorage.getItem(ACTIVE_PLAN_KEY) || 'null');
+    let currentView = 'grouped'; // 'grouped' lub 'timeline'
+
+    // --- ELEMENTY DOM ---
+    const exerciseInput = document.getElementById('exerciseInput');
+    const weightInput = document.getElementById('weightInput');
+    const repsInput = document.getElementById('repsInput');
+    const btnSaveSet = document.getElementById('btnSaveSet');
+    const workoutContainer = document.getElementById('workoutContainer');
+    const setsCountBadge = document.getElementById('setsCountBadge');
+    const headerDate = document.getElementById('headerDate');
+
+    // Licznik / Stoper
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerStatus = document.getElementById('timerStatus');
+    const btnToggleTimer = document.getElementById('btnToggleTimer');
+    const btnResetTimer = document.getElementById('btnResetTimer');
+    const btnAdd30s = document.getElementById('btnAdd30s');
+    const autoStartTimerCheck = document.getElementById('autoStartTimerCheck');
+    const presetButtons = document.querySelectorAll('.btn-preset');
+
+    // --- ZARZĄDZANIE LICZNIKIEM PRZERW (REST TIMER) ---
+    let timerTargetSeconds = parseInt(localStorage.getItem(TIMER_PRESET_KEY) || '90', 10);
+    let timerRemainingSeconds = timerTargetSeconds;
+    let timerInterval = null;
+    let timerRunning = false;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function updateTimerUI() {
+      timerDisplay.textContent = formatTime(timerRemainingSeconds);
+      if (timerRemainingSeconds <= 0 && timerRunning) {
+        timerDisplay.classList.add('timer-alert');
+        timerStatus.textContent = 'Czas minął! Następna seria!';
+      } else {
+        timerDisplay.classList.remove('timer-alert');
+        timerStatus.textContent = timerRunning ? 'Odliczanie odpoczynku...' : 'Zatrzymany';
+      }
+      btnToggleTimer.textContent = timerRunning ? 'Pauza' : 'Start';
+      btnToggleTimer.className = timerRunning 
+        ? 'px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-xs font-bold text-white shadow transition'
+        : 'px-3.5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-xs font-bold text-white shadow transition';
+    }
+
+    function playBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+      } catch (e) {}
+
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+    }
+
+    function startTimer() {
+      if (timerRemainingSeconds <= 0) {
+        timerRemainingSeconds = timerTargetSeconds;
+      }
+      clearInterval(timerInterval);
+      timerRunning = true;
+      updateTimerUI();
+
+      timerInterval = setInterval(() => {
+        if (timerRemainingSeconds > 0) {
+          timerRemainingSeconds--;
+          updateTimerUI();
+          if (timerRemainingSeconds === 0) {
+            playBeep();
+            updateTimerUI();
+          }
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      updateTimerUI();
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      timerRemainingSeconds = timerTargetSeconds;
+      updateTimerUI();
+    }
+
+    btnToggleTimer.addEventListener('click', () => {
+      if (timerRunning) pauseTimer();
+      else startTimer();
+    });
+
+    btnResetTimer.addEventListener('click', resetTimer);
+
+    btnAdd30s.addEventListener('click', () => {
+      timerRemainingSeconds += 30;
+      updateTimerUI();
+    });
+
+    presetButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        presetButtons.forEach(b => {
+          b.className = 'btn-preset py-1 text-xs rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-medium border border-slate-700/60 active:scale-95';
+        });
+        btn.className = 'btn-preset active py-1 text-xs rounded-lg bg-brand-600/20 text-brand-400 font-bold border border-brand-500/40 active:scale-95';
+        timerTargetSeconds = parseInt(btn.dataset.seconds, 10);
+        localStorage.setItem(TIMER_PRESET_KEY, timerTargetSeconds);
+        resetTimer();
+      });
+    });
+
+    // Ustawienie początkowego presetu
+    presetButtons.forEach(b => {
+      if (parseInt(b.dataset.seconds, 10) === timerTargetSeconds) {
+        b.click();
+      }
+    });
+
+    // --- INICJALIZACJA DATY ---
+    const today = new Date();
+    headerDate.textContent = today.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    // --- PRZYCISKI KROKOWE CIĘŻAR / POWTÓRZENIA ---
+    document.getElementById('btnWeightMinus').addEventListener('click', () => {
+      let val = parseFloat(weightInput.value) || 0;
+      weightInput.value = Math.max(0, val - 2.5);
+    });
+    document.getElementById('btnWeightPlus').addEventListener('click', () => {
+      let val = parseFloat(weightInput.value) || 0;
+      weightInput.value = val + 2.5;
+    });
+    document.getElementById('btnRepsMinus').addEventListener('click', () => {
+      let val = parseInt(repsInput.value, 10) || 0;
+      repsInput.value = Math.max(1, val - 1);
+    });
+    document.getElementById('btnRepsPlus').addEventListener('click', () => {
+      let val = parseInt(repsInput.value, 10) || 0;
+      repsInput.value = val + 1;
+    });
+
+    [weightInput, repsInput, exerciseInput].forEach(inp => {
+      inp.addEventListener('focus', function() { this.select(); });
+    });
+
+    // Szybkie chipy ćwiczeń
+    document.querySelectorAll('.quick-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        exerciseInput.value = btn.textContent.trim();
+        loadLastValuesForExercise(exerciseInput.value);
+      });
+    });
+
+    function loadLastValuesForExercise(name) {
+      const last = [...sets].reverse().find(s => s.exercise.toLowerCase() === name.toLowerCase());
+      if (last) {
+        weightInput.value = last.weight;
+        repsInput.value = last.reps;
+      }
+    }
+
+    exerciseInput.addEventListener('change', () => {
+      if (exerciseInput.value.trim()) {
+        loadLastValuesForExercise(exerciseInput.value.trim());
+      }
+    });
+
+    // --- ZAPIS SERII ---
+    btnSaveSet.addEventListener('click', () => {
+      const exercise = exerciseInput.value.trim();
+      const weight = parseFloat(weightInput.value);
+      const reps = parseInt(repsInput.value, 10);
+
+      if (!exercise) {
+        alert('Podaj lub wybierz nazwę ćwiczenia!');
+        exerciseInput.focus();
+        return;
+      }
+      if (isNaN(weight) || weight < 0 || isNaN(reps) || reps <= 0) {
+        alert('Podaj poprawny ciężar oraz liczbę powtórzeń!');
+        return;
+      }
+
+      const newSet = {
+        id: Date.now().toString(),
+        exercise,
+        weight,
+        reps,
+        timestamp: new Date().toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      sets.push(newSet);
+      saveSets();
+      renderWorkout();
+      renderActivePlanWidget();
+
+      // Automatyczny start licznika przerwy po serii
+      if (autoStartTimerCheck.checked) {
+        resetTimer();
+        startTimer();
+      }
+
+      // Lekkie kliknięcie haptyczne w telefonie
+      if ('vibrate' in navigator) {
+        navigator.vibrate(30);
+      }
+    });
+
+    function saveSets() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sets));
+    }
+
+    // --- RENDEROWANIE TRENINGU ---
+    function renderWorkout() {
+      setsCountBadge.textContent = `${sets.length} ${sets.length === 1 ? 'seria' : sets.length < 5 ? 'serie' : 'serii'}`;
+
+      if (sets.length === 0) {
+        workoutContainer.innerHTML = `
+          <div class="text-center py-10 px-4 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 text-slate-500">
+            <p class="text-sm font-medium">Brak zapisanych serii na dzisiaj.</p>
+            <p class="text-xs mt-1 text-slate-600">Wpisz ćwiczenie powyżej i kliknij „Zapisz serię”.</p>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentView === 'grouped') {
+        renderGroupedView();
+      } else {
+        renderTimelineView();
+      }
+    }
+
+    function renderGroupedView() {
+      // Grupowanie serii według ćwiczenia z zachowaniem kolejności
+      const groups = {};
+      sets.forEach(s => {
+        if (!groups[s.exercise]) groups[s.exercise] = [];
+        groups[s.exercise].push(s);
+      });
+
+      workoutContainer.innerHTML = Object.entries(groups).map(([exercise, groupSets]) => {
+        return `
+          <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 shadow">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-2">
+              <span class="font-bold text-sm text-brand-400 cursor-pointer hover:underline" onclick="selectExercise('${exercise.replace(/'/g, "\\'")}')">
+                ${exercise}
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono">${groupSets.length} s.</span>
+            </div>
+            <div class="space-y-1.5">
+              ${groupSets.map((s, idx) => `
+                <div class="flex items-center justify-between text-xs bg-slate-950/50 px-2.5 py-1.5 rounded-lg">
+                  <span class="text-slate-400 font-mono">Seria ${idx + 1}</span>
+                  <span class="font-bold font-mono text-white">${s.weight} kg × ${s.reps}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-slate-500">${s.timestamp}</span>
+                    <button onclick="deleteSet('${s.id}')" class="text-slate-500 hover:text-rose-400 p-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderTimelineView() {
+      workoutContainer.innerHTML = `
+        <div class="space-y-2">
+          ${[...sets].reverse().map(s => `
+            <div class="flex items-center justify-between bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs">
+              <div>
+                <p class="font-bold text-white">${s.exercise}</p>
+                <p class="text-[11px] font-mono text-brand-400">${s.weight} kg × ${s.reps} powt.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-500 font-mono">${s.timestamp}</span>
+                <button onclick="deleteSet('${s.id}')" class="text-slate-500 hover:text-rose-400 p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    window.selectExercise = function(name) {
+      exerciseInput.value = name;
+      loadLastValuesForExercise(name);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.deleteSet = function(id) {
+      if (confirm('Usunąć tę serię?')) {
+        sets = sets.filter(s => s.id !== id);
+        saveSets();
+        renderWorkout();
+        renderActivePlanWidget();
+      }
+    };
+
+    // Przełączanie widoków
+    document.getElementById('viewGrouped').addEventListener('click', () => {
+      currentView = 'grouped';
+      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold bg-brand-600 text-white transition';
+      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition';
+      renderWorkout();
+    });
+
+    document.getElementById('viewTimeline').addEventListener('click', () => {
+      currentView = 'timeline';
+      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold bg-brand-600 text-white transition';
+      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold text-slate-400 hover:text-white transition';
+      renderWorkout();
+    });
+
+    // Czyszczenie całego dzisiejszego treningu
+    document.getElementById('btnClearToday').addEventListener('click', () => {
+      if (sets.length === 0) return;
+      if (confirm('Czy na pewno chcesz zakończyć i wyczyścić dzisiejszy trening?')) {
+        sets = [];
+        saveSets();
+        renderWorkout();
+        renderActivePlanWidget();
+        resetTimer();
+      }
+    });
+
+    // --- MODUŁ PLANÓW TRENINGOWYCH ---
+    const DEFAULT_TEMPLATES = [
+      {
+        name: 'FBW A (Krata)',
+        exercises: [
+          { name: 'Przysiad ze sztangą', targetSets: 4, targetReps: 8 },
+          { name: 'Wyciskanie sztangi leżąc', targetSets: 4, targetReps: 8 },
+          { name: 'Wiosłowanie sztangą w opadzie', targetSets: 4, targetReps: 8 },
+          { name: 'Wyciskanie żołnierskie (OHP)', targetSets: 3, targetReps: 10 },
+          { name: 'Uginanie ramion z hantlami', targetSets: 3, targetReps: 12 }
+        ]
+      },
+      {
+        name: 'FBW B (Plecy/Nogi)',
+        exercises: [
+          { name: 'Martwy ciąg', targetSets: 4, targetReps: 6 },
+          { name: 'Wyciskanie hantli skos dodatni', targetSets: 4, targetReps: 10 },
+          { name: 'Podciąganie na drążku', targetSets: 4, targetReps: 8 },
+          { name: 'Wznosy bokiem na barki', targetSets: 3, targetReps: 15 },
+          { name: 'Dipsy (pompki na poręczach)', targetSets: 3, targetReps: 10 }
+        ]
+      }
+    ];
+
+    const plansModal = document.getElementById('plansModal');
+    document.getElementById('btnOpenPlans').addEventListener('click', () => {
+      renderTemplatesList();
+      plansModal.classList.remove('hidden');
+    });
+    document.getElementById('btnClosePlans').addEventListener('click', () => {
+      plansModal.classList.add('hidden');
+    });
+
+    function renderTemplatesList() {
+      const container = document.getElementById('templatesList');
+      container.innerHTML = DEFAULT_TEMPLATES.map((tmpl, idx) => `
+        <button onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-500 text-left transition active:scale-95">
+          <p class="font-bold text-white text-xs">${tmpl.name}</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">${tmpl.exercises.length} ćwiczeń</p>
+        </button>
+      `).join('');
+    }
+
+    window.activatePlanFromTemplate = function(idx) {
+      activePlan = DEFAULT_TEMPLATES[idx];
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
+      plansModal.classList.add('hidden');
+      renderActivePlanWidget();
+    };
+
+    document.getElementById('btnSaveCustomPlan').addEventListener('click', () => {
+      const name = document.getElementById('customPlanName').value.trim() || 'Własny Plan';
+      const text = document.getElementById('customPlanText').value.trim();
+      if (!text) {
+        alert('Wklej przynajmniej jedno ćwiczenie!');
+        return;
+      }
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      const exercises = lines.map(line => {
+        const parts = line.split('|').map(p => p.trim());
+        return {
+          name: parts[0],
+          targetSets: parseInt(parts[1], 10) || 3,
+          targetReps: parseInt(parts[2], 10) || 10
+        };
+      });
+
+      activePlan = { name, exercises };
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
+      plansModal.classList.add('hidden');
+      renderActivePlanWidget();
+    });
+
+    document.getElementById('btnCloseActivePlan').addEventListener('click', () => {
+      if (confirm('Ukryć aktywny plan?')) {
+        activePlan = null;
+        localStorage.removeItem(ACTIVE_PLAN_KEY);
+        renderActivePlanWidget();
+      }
+    });
+
+    function renderActivePlanWidget() {
+      const widget = document.getElementById('activePlanWidget');
+      if (!activePlan) {
+        widget.classList.add('hidden');
+        return;
+      }
+      widget.classList.remove('hidden');
+      document.getElementById('activePlanTitle').textContent = activePlan.name;
+
+      let totalTargetSets = 0;
+      let totalCompletedSets = 0;
+
+      const exContainer = document.getElementById('activePlanExercises');
+      exContainer.innerHTML = activePlan.exercises.map(ex => {
+        const count = sets.filter(s => s.exercise.toLowerCase() === ex.name.toLowerCase()).length;
+        totalTargetSets += ex.targetSets;
+        totalCompletedSets += Math.min(count, ex.targetSets);
+        const isDone = count >= ex.targetSets;
+
+        return `
+          <button onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps})" class="px-2.5 py-1.5 rounded-lg border text-left whitespace-nowrap active:scale-95 transition flex items-center gap-1.5 ${
+            isDone 
+              ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300' 
+              : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
+          }">
+            <span class="text-xs font-medium">${ex.name}</span>
+            <span class="text-[10px] font-mono px-1 py-0.2 rounded ${isDone ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'}">${count}/${ex.targetSets}</span>
+          </button>
+        `;
+      }).join('');
+
+      const progress = totalTargetSets > 0 ? (totalCompletedSets / totalTargetSets) * 100 : 0;
+      document.getElementById('planProgressBar').style.width = `${progress}%`;
+    }
+
+    window.selectPlanExercise = function(name, defaultReps) {
+      exerciseInput.value = name;
+      repsInput.value = defaultReps || 8;
+      loadLastValuesForExercise(name);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Inicjalizacja przy starcie
+    renderWorkout();
+    renderActivePlanWidget();
+    updateTimerUI();
+  </script>
 </body>
 </html>
