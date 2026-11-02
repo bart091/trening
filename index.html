@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Dziennik Treningowy</title>
 
-  <!-- PWA & Ekran Główny -->
+  <!-- PWA & iOS Safe Area -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- Zmiana z black-translucent na black oraz ustawienie theme-color zapobiega nachodzeniu pod Dynamic Island -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#141210">
   <meta name="apple-mobile-web-app-title" content="Trening">
 
   <!-- Tailwind CSS CDN -->
@@ -53,11 +55,25 @@
     html, body {
       width: 100%;
       max-width: 100vw;
-      overflow-x: hidden !important;
-      position: relative;
-      touch-action: pan-y;
+      overflow-x: hidden;
       -webkit-tap-highlight-color: transparent;
       background-color: #141210;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Bezpieczna strefa dla iOS PWA (Dynamic Island / Notch + dolny pasek Home) */
+    .ios-safe-header {
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .ios-safe-bottom {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    }
+
+    .ios-modal-safe {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
 
     * {
@@ -83,27 +99,34 @@
     }
   </style>
 </head>
-<body class="text-stone-100 min-h-screen pb-14 font-sans selection:bg-brand-500 selection:text-stone-950">
+<body class="text-stone-100 min-h-screen ios-safe-bottom font-sans selection:bg-brand-500 selection:text-stone-950">
 
-  <!-- GÓRNY PASEK NAWIGACJI -->
-  <header class="sticky top-0 z-40 bg-[#141210]/95 backdrop-blur-md border-b border-stone-800/80 px-4 py-3 max-w-lg mx-auto w-full flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-white shadow-md shadow-amber-600/30">
-        🔥
+  <!-- GÓRNY PASEK NAWIGACJI Z BEZPIECZNYM ODSTĘPEM DLA IPHONE (SAFE-AREA) -->
+  <header class="sticky top-0 z-40 bg-[#141210]/95 backdrop-blur-md border-b border-stone-800/80 ios-safe-header pb-3 px-4 w-full">
+    <div class="max-w-lg mx-auto w-full flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-white shadow-md shadow-amber-600/30">
+          🔥
+        </div>
+        <div>
+          <h1 class="text-sm font-bold tracking-tight text-stone-100 leading-tight">Trening</h1>
+          <div class="flex items-center gap-1.5 text-[11px] text-stone-400 font-medium">
+            <span id="headerDate">Dziś</span>
+            <span>•</span>
+            <span id="workoutDurationDisplay" class="font-mono text-amber-400 font-semibold">00:00</span>
+          </div>
+        </div>
       </div>
-      <div>
-        <h1 class="text-base font-bold tracking-tight text-stone-100 leading-tight">Dziennik Treningowy</h1>
-        <p class="text-[11px] text-stone-400 font-medium" id="headerDate">Dziś</p>
-      </div>
-    </div>
 
-    <div class="flex items-center gap-2">
-      <button id="btnOpenPlans" class="px-2.5 py-1.5 rounded-lg bg-stone-850 text-xs font-semibold text-stone-300 hover:text-white hover:bg-stone-800 transition active:scale-95 border border-stone-700/60 shadow-sm">
-        📋 Plany
-      </button>
-      <button id="btnClearToday" title="Wyczyść dzisiejszy trening" class="p-1.5 rounded-lg bg-stone-850 text-stone-400 hover:text-rose-400 hover:bg-stone-800 transition active:scale-95 border border-stone-700/60">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-      </button>
+      <div class="flex items-center gap-2">
+        <button id="btnOpenHistory" type="button" class="px-3 py-2 rounded-xl bg-stone-850 text-xs font-semibold text-stone-200 hover:text-white active:scale-95 border border-stone-700/80 shadow-sm flex items-center gap-1.5 cursor-pointer touch-manipulation">
+          <span>📅</span> <span>Historia</span>
+          <span id="historyCountBadge" class="px-1.5 py-0.2 bg-stone-800 text-amber-400 rounded-full text-[10px] font-mono">0</span>
+        </button>
+        <button id="btnOpenPlans" type="button" class="px-3 py-2 rounded-xl bg-stone-850 text-xs font-semibold text-stone-200 hover:text-white active:scale-95 border border-stone-700/80 shadow-sm cursor-pointer touch-manipulation">
+          📋 Plany
+        </button>
+      </div>
     </div>
   </header>
 
@@ -130,23 +153,23 @@
         </div>
 
         <div class="flex items-center gap-1.5">
-          <button id="btnToggleTimer" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-95 text-xs font-bold text-stone-950 shadow-md shadow-amber-600/30 transition">
+          <button id="btnToggleTimer" type="button" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-95 text-xs font-bold text-stone-950 shadow-md shadow-amber-600/30 transition touch-manipulation">
             Start
           </button>
-          <button id="btnAdd30s" class="px-2.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-xs font-semibold text-stone-300 border border-stone-700/80">
+          <button id="btnAdd30s" type="button" class="px-2.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-xs font-semibold text-stone-300 border border-stone-700/80 touch-manipulation">
             +30s
           </button>
-          <button id="btnResetTimer" class="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-400 border border-stone-700/80" title="Resetuj">
+          <button id="btnResetTimer" type="button" class="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-400 border border-stone-700/80 touch-manipulation" title="Resetuj">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-4 gap-1.5 mt-2.5">
-        <button data-seconds="60" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">60s</button>
-        <button data-seconds="90" class="btn-preset active py-1 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95">90s</button>
-        <button data-seconds="120" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">120s</button>
-        <button data-seconds="180" class="btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95">180s</button>
+        <button type="button" data-seconds="60" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">60s</button>
+        <button type="button" data-seconds="90" class="btn-preset active py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95 touch-manipulation">90s</button>
+        <button type="button" data-seconds="120" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">120s</button>
+        <button type="button" data-seconds="180" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">180s</button>
       </div>
     </section>
 
@@ -156,7 +179,7 @@
         <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
           <span>🎯</span> <span id="activePlanTitle">Plan Treningowy</span>
         </span>
-        <button id="btnCloseActivePlan" class="text-[11px] text-stone-400 hover:text-stone-200">Zwiń</button>
+        <button id="btnCloseActivePlan" type="button" class="text-[11px] text-stone-400 hover:text-stone-200 px-2 py-0.5">Wyłącz plan</button>
       </div>
       <div class="w-full bg-stone-950 rounded-full h-1.5 mb-2 overflow-hidden border border-stone-800">
         <div id="planProgressBar" class="bg-gradient-to-r from-amber-600 to-orange-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
@@ -199,11 +222,11 @@
 
           <!-- Szybkie chipy ćwiczeń -->
           <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Wyciskanie</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Przysiad</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Martwy ciąg</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">Podciąganie</button>
-            <button type="button" class="quick-chip px-2.5 py-1 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800">OHP</button>
+            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Wyciskanie sztangi leżąc</button>
+            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Przysiad ze sztangą</button>
+            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Martwy ciąg</button>
+            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Podciąganie na drążku</button>
+            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">OHP</button>
           </div>
         </div>
 
@@ -216,7 +239,7 @@
               <span class="text-[10px] text-amber-500/70 font-mono">krok 2.5</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">−</button>
+              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
               <input 
                 type="number" 
                 step="0.5" 
@@ -224,7 +247,7 @@
                 value="60" 
                 class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
               >
-              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">+</button>
+              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
             </div>
           </div>
 
@@ -235,7 +258,7 @@
               <span class="text-[10px] text-amber-500/70 font-mono">krok 1</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">−</button>
+              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
               <input 
                 type="number" 
                 step="1" 
@@ -243,7 +266,7 @@
                 value="8" 
                 class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
               >
-              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80">+</button>
+              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
             </div>
           </div>
 
@@ -252,7 +275,7 @@
         <button 
           type="button" 
           id="btnSaveSet" 
-          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] font-bold text-stone-950 text-base shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition"
+          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] font-bold text-stone-950 text-base shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition touch-manipulation"
         >
           <svg class="w-5 h-5 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
           Zapisz serię
@@ -264,55 +287,74 @@
     <section class="space-y-3">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <h2 class="text-sm font-bold tracking-tight text-stone-200 uppercase tracking-wider">Dzisiejsza sesja</h2>
+          <h2 class="text-sm font-bold tracking-tight text-stone-200 uppercase tracking-wider">Bieżąca sesja</h2>
           <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-850 text-amber-400 border border-stone-800">0 serii</span>
         </div>
 
         <div class="flex items-center bg-stone-900 border border-stone-800 p-0.5 rounded-lg text-[11px]">
-          <button id="viewGrouped" class="px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition">Grupy</button>
-          <button id="viewTimeline" class="px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition">Ostatnie</button>
+          <button id="viewGrouped" type="button" class="px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition">Grupy</button>
+          <button id="viewTimeline" type="button" class="px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition">Ostatnie</button>
         </div>
       </div>
 
       <div id="workoutContainer" class="space-y-2.5">
         <!-- Generowane dynamicznie -->
       </div>
+
+      <!-- Przyciski akcji sesji: Zapisz trening do historii lub wyczyść -->
+      <div id="sessionActions" class="hidden pt-2 space-y-2">
+        <button 
+          id="btnFinishAndSaveWorkout" 
+          type="button"
+          class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition touch-manipulation"
+        >
+          <span>✅</span> Zakończ i zapisz trening w Historii
+        </button>
+        <button 
+          id="btnDiscardWorkout" 
+          type="button"
+          class="w-full py-2.5 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-500 hover:text-rose-400 text-xs font-medium border border-stone-800 transition touch-manipulation"
+        >
+          Wyczyść dzisiejsze serie bez zapisywania
+        </button>
+      </div>
     </section>
 
   </main>
 
-  <!-- MODAL: ZARZĄDZANIE PLANAMI TRENINGOWYMI -->
-  <div id="plansModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-      <div class="px-4 py-3 border-b border-stone-800 flex items-center justify-between">
-        <h3 class="font-bold text-stone-100 text-sm">Plany Treningowe (Serie i Powtórzenia)</h3>
-        <button id="btnClosePlans" class="text-stone-400 hover:text-white text-xl p-1 leading-none">&times;</button>
+  <!-- MODAL 1: PLANY TRENINGOWY (Z UWZGLĘDNIENIEM SAFE AREA NA IPHONE) -->
+  <div id="plansModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 ios-modal-safe">
+    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-3.5 border-b border-stone-800 flex items-center justify-between">
+        <h3 class="font-bold text-stone-100 text-sm flex items-center gap-1.5">📋 Biblioteka Planów Treningowych</h3>
+        <button id="btnClosePlans" type="button" class="text-stone-400 hover:text-white text-2xl px-2 py-0.5 leading-none touch-manipulation">&times;</button>
       </div>
 
-      <div class="p-4 overflow-y-auto space-y-4 text-xs">
+      <div class="p-4 overflow-y-auto space-y-5 text-xs">
         
-        <!-- Szablony -->
         <div>
-          <span class="font-semibold text-stone-400 uppercase tracking-wider text-[10px] block mb-2">Gotowe szablony</span>
+          <span class="font-semibold text-amber-400 uppercase tracking-wider text-[10px] block mb-2">Moje zapisane plany</span>
+          <div id="savedCustomPlansList" class="space-y-2"></div>
+        </div>
+
+        <div class="border-t border-stone-800 pt-3">
+          <span class="font-semibold text-stone-400 uppercase tracking-wider text-[10px] block mb-2">Gotowe szablony startowe</span>
           <div class="grid grid-cols-2 gap-2" id="templatesList"></div>
         </div>
 
-        <!-- Tryb wklejania tekstu -->
         <div class="border-t border-stone-800 pt-3">
           <div class="flex justify-between items-center mb-1.5">
-            <span class="font-semibold text-stone-400 uppercase tracking-wider text-[10px]">Wklej własny plan (Szybki tekst)</span>
-            <span class="text-[10px] text-amber-500 font-mono">Format: Ćwiczenie 4x8</span>
+            <span class="font-semibold text-stone-200 uppercase tracking-wider text-[10px]">Stwórz i zapisz nowy plan</span>
+            <span class="text-[10px] text-amber-500 font-mono">Ćwiczenie Seria×Powt</span>
           </div>
           <p class="text-[11px] text-stone-400 mb-2 leading-relaxed">
-            Wpisz lub wklej listę linijka po linijce, np.:<br>
-            <code class="text-amber-400 bg-black/40 px-1.5 py-0.5 rounded">Przysiad ze sztangą 4x8</code><br>
-            <code class="text-amber-400 bg-black/40 px-1.5 py-0.5 rounded">Wyciskanie leżąc 4x10</code><br>
-            <code class="text-stone-400 bg-black/40 px-1.5 py-0.5 rounded">Wiosłowanie | 3 | 12</code> (lub format z pionową kreską)
+            Wpisz każde ćwiczenie w nowej linii z liczbą serii i powtórzeń:<br>
+            <code class="text-amber-400 bg-black/40 px-1.5 py-0.5 rounded">Przysiad ze sztangą 4x8</code> lub <code class="text-stone-300 bg-black/40 px-1.5 py-0.5 rounded">Wyciskanie | 4 | 10</code>
           </p>
-          <input type="text" id="customPlanName" placeholder="Nazwa Twojego planu (np. Góra Ciała A)" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg px-2.5 py-2 mb-2 text-stone-100 outline-none focus:border-amber-500 font-medium">
-          <textarea id="customPlanText" rows="4" placeholder="Przysiad ze sztangą 4x8&#10;Wyciskanie sztangi leżąc 4x8&#10;Wiosłowanie sztangą 4x10&#10;Wznosy bokiem 3x15" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg p-2.5 text-stone-100 outline-none focus:border-amber-500 font-mono text-[11px] leading-relaxed"></textarea>
-          <button id="btnSaveCustomPlan" class="mt-2 w-full py-2.5 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-stone-950 rounded-xl font-bold transition shadow-md">
-            Zapisz i zaczytaj ten plan
+          <input type="text" id="customPlanName" placeholder="Nazwa planu (np. FBW A - Poniedziałek)" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg px-2.5 py-2.5 mb-2 text-stone-100 outline-none focus:border-amber-500 font-medium">
+          <textarea id="customPlanText" rows="4" placeholder="Przysiad ze sztangą 4x8&#10;Wyciskanie sztangi leżąc 4x8&#10;Wiosłowanie sztangą 4x10&#10;Wyciskanie żołnierskie 3x10" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg p-2.5 text-stone-100 outline-none focus:border-amber-500 font-mono text-[11px] leading-relaxed"></textarea>
+          <button id="btnSaveCustomPlan" type="button" class="mt-2 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 rounded-xl font-bold transition shadow-md touch-manipulation">
+            💾 Zapisz plan na stałe i aktywuj
           </button>
         </div>
 
@@ -320,14 +362,37 @@
     </div>
   </div>
 
+  <!-- MODAL 2: HISTORIA ZAPISANYCH TRENINGÓW -->
+  <div id="historyModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 ios-modal-safe">
+    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+      <div class="px-4 py-3.5 border-b border-stone-800 flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-stone-100 text-sm">📅 Zapisane Treningi (Historia)</h3>
+          <p class="text-[10px] text-stone-400">Pełny dziennik odbytych sesji z czasem i seriami</p>
+        </div>
+        <button id="btnCloseHistory" type="button" class="text-stone-400 hover:text-white text-2xl px-2 py-0.5 leading-none touch-manipulation">&times;</button>
+      </div>
+
+      <div id="historyListContainer" class="p-4 overflow-y-auto space-y-3 text-xs flex-1">
+        <!-- Generowane dynamicznie -->
+      </div>
+    </div>
+  </div>
+
   <!-- JAVASCRIPT: LOGIKA APLIKACJI -->
   <script>
-    const STORAGE_KEY = 'gym_workout_sets_v2';
-    const ACTIVE_PLAN_KEY = 'gym_active_plan_v2';
+    const STORAGE_KEY = 'gym_workout_sets_v3';
+    const WORKOUT_START_KEY = 'gym_workout_start_time_v3';
+    const ACTIVE_PLAN_KEY = 'gym_active_plan_v3';
+    const SAVED_PLANS_KEY = 'gym_saved_custom_plans_v3';
+    const WORKOUT_HISTORY_KEY = 'gym_workout_history_v3';
     const TIMER_PRESET_KEY = 'gym_timer_preset';
 
     let sets = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let workoutStartTime = parseInt(localStorage.getItem(WORKOUT_START_KEY) || '0', 10) || null;
     let activePlan = JSON.parse(localStorage.getItem(ACTIVE_PLAN_KEY) || 'null');
+    let savedCustomPlans = JSON.parse(localStorage.getItem(SAVED_PLANS_KEY) || '[]');
+    let workoutHistory = JSON.parse(localStorage.getItem(WORKOUT_HISTORY_KEY) || '[]');
     let currentView = 'grouped';
 
     const exerciseInput = document.getElementById('exerciseInput');
@@ -337,9 +402,34 @@
     const workoutContainer = document.getElementById('workoutContainer');
     const setsCountBadge = document.getElementById('setsCountBadge');
     const headerDate = document.getElementById('headerDate');
+    const workoutDurationDisplay = document.getElementById('workoutDurationDisplay');
     const planTargetHint = document.getElementById('planTargetHint');
+    const sessionActions = document.getElementById('sessionActions');
+    const historyCountBadge = document.getElementById('historyCountBadge');
 
-    // Stoper
+    function formatDuration(ms) {
+      if (!ms || ms < 0) return '00:00';
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      if (hours > 0) {
+        return `${hours}h ${String(minutes).padStart(2, '0')}m`;
+      }
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function updateWorkoutDurationUI() {
+      if (!workoutStartTime || sets.length === 0) {
+        workoutDurationDisplay.textContent = '00:00';
+        return;
+      }
+      const elapsed = Date.now() - workoutStartTime;
+      workoutDurationDisplay.textContent = formatDuration(elapsed);
+    }
+
+    setInterval(updateWorkoutDurationUI, 1000);
+
     const timerDisplay = document.getElementById('timerDisplay');
     const timerStatus = document.getElementById('timerStatus');
     const btnToggleTimer = document.getElementById('btnToggleTimer');
@@ -370,8 +460,8 @@
       }
       btnToggleTimer.textContent = timerRunning ? 'Pauza' : 'Start';
       btnToggleTimer.className = timerRunning 
-        ? 'px-3.5 py-2 rounded-xl bg-orange-700 hover:bg-orange-600 text-xs font-bold text-white shadow transition'
-        : 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-xs font-bold text-stone-950 shadow transition';
+        ? 'px-3.5 py-2 rounded-xl bg-orange-700 hover:bg-orange-600 text-xs font-bold text-white shadow transition touch-manipulation'
+        : 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-xs font-bold text-stone-950 shadow transition touch-manipulation';
     }
 
     function playBeep() {
@@ -441,9 +531,9 @@
     presetButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         presetButtons.forEach(b => {
-          b.className = 'btn-preset py-1 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95';
+          b.className = 'btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation';
         });
-        btn.className = 'btn-preset active py-1 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95';
+        btn.className = 'btn-preset active py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95 touch-manipulation';
         timerTargetSeconds = parseInt(btn.dataset.seconds, 10);
         localStorage.setItem(TIMER_PRESET_KEY, timerTargetSeconds);
         resetTimer();
@@ -459,7 +549,6 @@
     const today = new Date();
     headerDate.textContent = today.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
 
-    // Przyciski krokowe
     document.getElementById('btnWeightMinus').addEventListener('click', () => {
       let val = parseFloat(weightInput.value) || 0;
       weightInput.value = Math.max(0, val - 2.5);
@@ -490,9 +579,20 @@
     });
 
     function loadLastValuesForExercise(name) {
-      const last = [...sets].reverse().find(s => s.exercise.toLowerCase() === name.toLowerCase());
-      if (last) {
-        weightInput.value = last.weight;
+      const target = name.toLowerCase();
+      const lastToday = [...sets].reverse().find(s => s.exercise.toLowerCase() === target);
+      if (lastToday) {
+        weightInput.value = lastToday.weight;
+        return;
+      }
+      for (const session of workoutHistory) {
+        if (session.sets) {
+          const found = [...session.sets].reverse().find(s => s.exercise.toLowerCase() === target);
+          if (found) {
+            weightInput.value = found.weight;
+            return;
+          }
+        }
       }
     }
 
@@ -505,17 +605,14 @@
       const match = activePlan.exercises.find(e => e.name.toLowerCase() === exName);
       if (match) {
         const count = sets.filter(s => s.exercise.toLowerCase() === exName).length;
-        planTargetHint.textContent = `Plan: Seria ${count + 1}/${match.targetSets} (${match.targetReps} powt.)`;
+        planTargetHint.textContent = `Plan: Seria ${count + 1}/${match.targetSets} (cel: ${match.targetReps} powt.)`;
         planTargetHint.classList.remove('hidden');
       } else {
         planTargetHint.classList.add('hidden');
       }
     }
 
-    exerciseInput.addEventListener('input', () => {
-      checkPlanHint();
-    });
-
+    exerciseInput.addEventListener('input', checkPlanHint);
     exerciseInput.addEventListener('change', () => {
       if (exerciseInput.value.trim()) {
         loadLastValuesForExercise(exerciseInput.value.trim());
@@ -523,7 +620,6 @@
       }
     });
 
-    // Zapis serii
     btnSaveSet.addEventListener('click', () => {
       const exercise = exerciseInput.value.trim();
       const weight = parseFloat(weightInput.value);
@@ -539,6 +635,11 @@
         return;
       }
 
+      if (sets.length === 0 || !workoutStartTime) {
+        workoutStartTime = Date.now();
+        localStorage.setItem(WORKOUT_START_KEY, workoutStartTime.toString());
+      }
+
       const newSet = {
         id: Date.now().toString(),
         exercise,
@@ -552,6 +653,7 @@
       renderWorkout();
       renderActivePlanWidget();
       checkPlanHint();
+      updateWorkoutDurationUI();
 
       if (autoStartTimerCheck.checked) {
         resetTimer();
@@ -569,16 +671,20 @@
 
     function renderWorkout() {
       setsCountBadge.textContent = `${sets.length} ${sets.length === 1 ? 'seria' : sets.length < 5 ? 'serie' : 'serii'}`;
+      historyCountBadge.textContent = workoutHistory.length;
 
       if (sets.length === 0) {
+        sessionActions.classList.add('hidden');
         workoutContainer.innerHTML = `
-          <div class="text-center py-10 px-4 bg-stone-900/40 rounded-2xl border border-dashed border-stone-800 text-stone-500">
-            <p class="text-sm font-medium">Brak zapisanych serii na dzisiaj.</p>
-            <p class="text-xs mt-1 text-stone-600">Wpisz ćwiczenie powyżej i kliknij „Zapisz serię”.</p>
+          <div class="text-center py-9 px-4 bg-stone-900/40 rounded-2xl border border-dashed border-stone-800 text-stone-500">
+            <p class="text-sm font-medium">Brak zapisanych serii w bieżącej sesji.</p>
+            <p class="text-xs mt-1 text-stone-600">Pierwsza zapisana seria automatycznie uruchomi czas treningu.</p>
           </div>
         `;
         return;
       }
+
+      sessionActions.classList.remove('hidden');
 
       if (currentView === 'grouped') {
         renderGroupedView();
@@ -607,10 +713,10 @@
               ${groupSets.map((s, idx) => `
                 <div class="flex items-center justify-between text-xs bg-[#110f0d] px-2.5 py-1.5 rounded-lg border border-stone-800/40">
                   <span class="text-stone-400 font-mono">Seria ${idx + 1}</span>
-                  <span class="font-bold font-mono text-stone-100">${s.weight} kg × ${s.reps}</span>
+                  <span class="font-bold font-mono text-stone-100">${s.weight} kg × ${s.reps} powt.</span>
                   <div class="flex items-center gap-2">
                     <span class="text-[10px] text-stone-500">${s.timestamp}</span>
-                    <button onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
+                    <button type="button" onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
                       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                   </div>
@@ -633,7 +739,7 @@
               </div>
               <div class="flex items-center gap-2">
                 <span class="text-[10px] text-stone-500 font-mono">${s.timestamp}</span>
-                <button onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
+                <button type="button" onclick="deleteSet('${s.id}')" class="text-stone-500 hover:text-rose-400 p-1">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </button>
               </div>
@@ -653,40 +759,178 @@
     window.deleteSet = function(id) {
       if (confirm('Usunąć tę serię?')) {
         sets = sets.filter(s => s.id !== id);
+        if (sets.length === 0) {
+          workoutStartTime = null;
+          localStorage.removeItem(WORKOUT_START_KEY);
+        }
         saveSets();
         renderWorkout();
         renderActivePlanWidget();
         checkPlanHint();
+        updateWorkoutDurationUI();
       }
     };
 
     document.getElementById('viewGrouped').addEventListener('click', () => {
       currentView = 'grouped';
-      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
-      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
+      document.getElementById('viewGrouped').className = 'px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
+      document.getElementById('viewTimeline').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
       renderWorkout();
     });
 
     document.getElementById('viewTimeline').addEventListener('click', () => {
       currentView = 'timeline';
-      document.getElementById('viewTimeline').className = 'px-2 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
-      document.getElementById('viewGrouped').className = 'px-2 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
+      document.getElementById('viewTimeline').className = 'px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
+      document.getElementById('viewGrouped').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
       renderWorkout();
     });
 
-    document.getElementById('btnClearToday').addEventListener('click', () => {
+    document.getElementById('btnFinishAndSaveWorkout').addEventListener('click', () => {
       if (sets.length === 0) return;
-      if (confirm('Czy na pewno chcesz zakończyć i wyczyścić dzisiejszy trening?')) {
+
+      const durationMs = workoutStartTime ? (Date.now() - workoutStartTime) : 0;
+      const durationFormatted = formatDuration(durationMs);
+      const totalVolume = sets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
+
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('pl-PL', {
+        weekday: 'short',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+      const timeStr = now.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+
+      const workoutRecord = {
+        id: Date.now().toString(),
+        date: `${dateStr}, ${timeStr}`,
+        planName: activePlan ? activePlan.name : 'Trening własny',
+        duration: durationFormatted,
+        totalSets: sets.length,
+        totalVolume: Math.round(totalVolume),
+        sets: [...sets]
+      };
+
+      workoutHistory.unshift(workoutRecord);
+      localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(workoutHistory));
+
+      sets = [];
+      workoutStartTime = null;
+      localStorage.removeItem(WORKOUT_START_KEY);
+      saveSets();
+      resetTimer();
+      renderWorkout();
+      renderActivePlanWidget();
+      checkPlanHint();
+      updateWorkoutDurationUI();
+
+      renderHistoryList();
+      historyModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btnDiscardWorkout').addEventListener('click', () => {
+      if (sets.length === 0) return;
+      if (confirm('Czy na pewno wyczyścić dzisiejszą sesję BEZ zapisywania jej w historii?')) {
         sets = [];
+        workoutStartTime = null;
+        localStorage.removeItem(WORKOUT_START_KEY);
         saveSets();
         renderWorkout();
         renderActivePlanWidget();
         checkPlanHint();
         resetTimer();
+        updateWorkoutDurationUI();
       }
     });
 
-    // --- MODUŁ PLANÓW TRENINGOWYCH ---
+    const historyModal = document.getElementById('historyModal');
+    const historyListContainer = document.getElementById('historyListContainer');
+
+    document.getElementById('btnOpenHistory').addEventListener('click', () => {
+      renderHistoryList();
+      historyModal.classList.remove('hidden');
+    });
+
+    document.getElementById('btnCloseHistory').addEventListener('click', () => {
+      historyModal.classList.add('hidden');
+    });
+
+    function renderHistoryList() {
+      historyCountBadge.textContent = workoutHistory.length;
+
+      if (workoutHistory.length === 0) {
+        historyListContainer.innerHTML = `
+          <div class="text-center py-10 text-stone-500">
+            <p class="font-medium text-sm">Brak zapisanych treningów w historii.</p>
+            <p class="text-[11px] mt-1">Po skończeniu serii kliknij „Zakończ i zapisz trening”, aby zachować wyniki.</p>
+          </div>
+        `;
+        return;
+      }
+
+      historyListContainer.innerHTML = workoutHistory.map(session => {
+        const grouped = {};
+        session.sets.forEach(s => {
+          if (!grouped[s.exercise]) grouped[s.exercise] = [];
+          grouped[s.exercise].push(s);
+        });
+
+        const exercisesHtml = Object.entries(grouped).map(([exName, exSets]) => {
+          const setsSummary = exSets.map((s, i) => `<span class="inline-block bg-stone-900 border border-stone-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-stone-200">${i + 1}: ${s.weight}kg×${s.reps}</span>`).join(' ');
+          return `
+            <div class="py-1.5 border-b border-stone-800/50 last:border-none">
+              <div class="flex justify-between items-center mb-1">
+                <span class="font-semibold text-stone-200 text-xs">${exName}</span>
+                <span class="text-[10px] font-mono text-amber-400">${exSets.length} serie</span>
+              </div>
+              <div class="flex flex-wrap gap-1">${setsSummary}</div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="bg-[#110f0d] border border-stone-800 rounded-xl p-3 space-y-2">
+            <div class="flex items-start justify-between border-b border-stone-800 pb-2">
+              <div>
+                <span class="text-[10px] text-amber-500 font-bold uppercase tracking-wider">${session.planName}</span>
+                <h4 class="font-bold text-stone-100 text-xs">${session.date}</h4>
+              </div>
+              <button type="button" onclick="deleteHistorySession('${session.id}')" class="text-stone-500 hover:text-rose-400 p-1" title="Usuń wpis z historii">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 bg-stone-900/70 rounded-lg p-2 text-center font-mono">
+              <div>
+                <span class="block text-[9px] text-stone-500 uppercase">Czas treningu</span>
+                <span class="text-xs font-bold text-amber-400">⏱ ${session.duration}</span>
+              </div>
+              <div>
+                <span class="block text-[9px] text-stone-500 uppercase">Liczba serii</span>
+                <span class="text-xs font-bold text-stone-200">${session.totalSets}</span>
+              </div>
+              <div>
+                <span class="block text-[9px] text-stone-500 uppercase">Objętość</span>
+                <span class="text-xs font-bold text-stone-200">${session.totalVolume} kg</span>
+              </div>
+            </div>
+
+            <div class="pt-1">
+              ${exercisesHtml}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.deleteHistorySession = function(id) {
+      if (confirm('Czy na pewno usunąć ten zapisany trening z historii?')) {
+        workoutHistory = workoutHistory.filter(h => h.id !== id);
+        localStorage.setItem(WORKOUT_HISTORY_KEY, JSON.stringify(workoutHistory));
+        renderHistoryList();
+      }
+    };
+
     const DEFAULT_TEMPLATES = [
       {
         name: 'FBW A (Siła / Hipertrofia)',
@@ -712,6 +956,7 @@
 
     const plansModal = document.getElementById('plansModal');
     document.getElementById('btnOpenPlans').addEventListener('click', () => {
+      renderSavedCustomPlans();
       renderTemplatesList();
       plansModal.classList.remove('hidden');
     });
@@ -719,12 +964,59 @@
       plansModal.classList.add('hidden');
     });
 
+    function renderSavedCustomPlans() {
+      const container = document.getElementById('savedCustomPlansList');
+      if (savedCustomPlans.length === 0) {
+        container.innerHTML = `
+          <div class="p-3 rounded-xl bg-[#110f0d] border border-dashed border-stone-800 text-stone-500 text-center text-[11px]">
+            Nie masz jeszcze zapisanych własnych planów. Stwórz swój plan poniżej, aby mieć go zawsze pod ręką!
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = savedCustomPlans.map((plan, idx) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500/60 transition">
+          <div class="flex-1 cursor-pointer" onclick="activateSavedCustomPlan(${idx})">
+            <p class="font-bold text-stone-100 text-xs">${plan.name}</p>
+            <p class="text-[10px] text-amber-400 font-mono mt-0.5">
+              ${plan.exercises.map(e => `${e.name} (${e.targetSets}×${e.targetReps})`).join(', ')}
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 ml-2">
+            <button type="button" onclick="activateSavedCustomPlan(${idx})" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-stone-950 font-bold text-[11px] transition">
+              Wczytaj
+            </button>
+            <button type="button" onclick="deleteSavedCustomPlan(${idx})" class="p-1.5 text-stone-500 hover:text-rose-400" title="Usuń plan">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.activateSavedCustomPlan = function(idx) {
+      activePlan = savedCustomPlans[idx];
+      localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
+      plansModal.classList.add('hidden');
+      renderActivePlanWidget();
+      checkPlanHint();
+    };
+
+    window.deleteSavedCustomPlan = function(idx) {
+      if (confirm('Usunąć ten plan z Twojej biblioteki?')) {
+        savedCustomPlans.splice(idx, 1);
+        localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(savedCustomPlans));
+        renderSavedCustomPlans();
+      }
+    };
+
     function renderTemplatesList() {
       const container = document.getElementById('templatesList');
       container.innerHTML = DEFAULT_TEMPLATES.map((tmpl, idx) => `
-        <button onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500 text-left transition active:scale-95">
+        <button type="button" onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500 text-left transition active:scale-95">
           <p class="font-bold text-stone-100 text-xs">${tmpl.name}</p>
-          <p class="text-[10px] text-amber-500 font-mono mt-0.5">${tmpl.exercises.length} ćwiczeń z seriami/powt.</p>
+          <p class="text-[10px] text-stone-400 font-mono mt-0.5">${tmpl.exercises.length} ćwiczeń</p>
         </button>
       `).join('');
     }
@@ -737,12 +1029,10 @@
       checkPlanHint();
     };
 
-    // Parser tekstu obsługujący "Ćwiczenie 4x8", "Ćwiczenie | 4 | 8", "Ćwiczenie, 4, 8"
     function parseExerciseLine(line) {
       line = line.trim();
       if (!line) return null;
 
-      // 1. Obsługa formatu: "Nazwa ćwiczenia 4x8" lub "Nazwa ćwiczenia 4 x 8"
       const xMatch = line.match(/^(.*?)[,\s|]+(\d+)\s*[xX*×]\s*(\d+)\s*$/);
       if (xMatch) {
         return {
@@ -752,7 +1042,6 @@
         };
       }
 
-      // 2. Obsługa formatu z kreskami / przecinkami: "Nazwa | 4 | 8" lub "Nazwa, 4, 8"
       const delimiter = line.includes('|') ? '|' : (line.includes(',') ? ',' : null);
       if (delimiter) {
         const parts = line.split(delimiter).map(p => p.trim());
@@ -771,7 +1060,6 @@
         }
       }
 
-      // 3. Wpisana sama nazwa ćwiczenia (domyślnie 3 serie po 10 powtórzeń)
       return {
         name: line,
         targetSets: 3,
@@ -780,10 +1068,10 @@
     }
 
     document.getElementById('btnSaveCustomPlan').addEventListener('click', () => {
-      const name = document.getElementById('customPlanName').value.trim() || 'Własny Plan';
+      const name = document.getElementById('customPlanName').value.trim() || `Mój Plan #${savedCustomPlans.length + 1}`;
       const text = document.getElementById('customPlanText').value.trim();
       if (!text) {
-        alert('Wklej przynajmniej jedno ćwiczenie z liczbą serii i powtórzeń!');
+        alert('Wpisz przynajmniej jedno ćwiczenie!');
         return;
       }
       
@@ -797,24 +1085,30 @@
       });
 
       if (exercises.length === 0) {
-        alert('Nie udało się rozpoznać ćwiczeń. Użyj formatu np. "Wyciskanie 4x8"');
+        alert('Nie udało się rozpoznać ćwiczeń.');
         return;
       }
 
-      activePlan = { name, exercises };
+      const newPlan = { id: Date.now().toString(), name, exercises };
+      savedCustomPlans.unshift(newPlan);
+      localStorage.setItem(SAVED_PLANS_KEY, JSON.stringify(savedCustomPlans));
+
+      activePlan = newPlan;
       localStorage.setItem(ACTIVE_PLAN_KEY, JSON.stringify(activePlan));
+
+      document.getElementById('customPlanName').value = '';
+      document.getElementById('customPlanText').value = '';
+
       plansModal.classList.add('hidden');
       renderActivePlanWidget();
       checkPlanHint();
     });
 
     document.getElementById('btnCloseActivePlan').addEventListener('click', () => {
-      if (confirm('Ukryć aktywny plan?')) {
-        activePlan = null;
-        localStorage.removeItem(ACTIVE_PLAN_KEY);
-        renderActivePlanWidget();
-        checkPlanHint();
-      }
+      activePlan = null;
+      localStorage.removeItem(ACTIVE_PLAN_KEY);
+      renderActivePlanWidget();
+      checkPlanHint();
     });
 
     function renderActivePlanWidget() {
@@ -837,7 +1131,7 @@
         const isDone = count >= ex.targetSets;
 
         return `
-          <button onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps}, ${ex.targetSets})" class="px-2.5 py-1.5 rounded-xl border text-left whitespace-nowrap active:scale-95 transition flex flex-col gap-0.5 ${
+          <button type="button" onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps}, ${ex.targetSets})" class="px-2.5 py-1.5 rounded-xl border text-left whitespace-nowrap active:scale-95 transition flex flex-col gap-0.5 ${
             isDone 
               ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' 
               : 'bg-[#110f0d] border-stone-800 text-stone-300 hover:border-amber-500/50'
@@ -855,7 +1149,7 @@
       document.getElementById('planProgressBar').style.width = `${progress}%`;
     }
 
-    window.selectPlanExercise = function(name, defaultReps, targetSets) {
+    window.selectPlanExercise = function(name, defaultReps) {
       exerciseInput.value = name;
       repsInput.value = defaultReps || 8;
       loadLastValuesForExercise(name);
@@ -863,10 +1157,10 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Start
     renderWorkout();
     renderActivePlanWidget();
     updateTimerUI();
+    updateWorkoutDurationUI();
   </script>
 </body>
 </html>
