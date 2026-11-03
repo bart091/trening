@@ -2,14 +2,14 @@
 <html lang="pl" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dziennik Treningowy</title>
 
-  <!-- PWA & iOS Safe Area -->
+  <!-- PWA & iOS Konfiguracja bez rozmycia systemowego -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <!-- Zmiana z black-translucent na black oraz ustawienie theme-color zapobiega nachodzeniu pod Dynamic Island -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Wartość "black" zamiast "black-translucent" wyłącza systemowe rozmycie iOS na górze ekranu -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="theme-color" content="#141210">
   <meta name="apple-mobile-web-app-title" content="Trening">
 
@@ -52,28 +52,44 @@
   </script>
 
   <style>
+    /* Natywny kontener App-Shell: blokuje systemowe bujanie całą stroną na iOS */
     html, body {
       width: 100%;
-      max-width: 100vw;
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-      background-color: #141210;
+      height: 100%;
       margin: 0;
       padding: 0;
+      overflow: hidden;
+      position: fixed;
+      inset: 0;
+      background-color: #141210;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
-    /* Bezpieczna strefa dla iOS PWA (Dynamic Island / Notch + dolny pasek Home) */
-    .ios-safe-header {
-      padding-top: max(12px, env(safe-area-inset-top));
+    input, textarea {
+      -webkit-user-select: text;
+      user-select: text;
     }
 
-    .ios-safe-bottom {
-      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    /* Gwarantowany odstęp od góry omijający strefę rozmycia iOS / Dynamic Island */
+    .app-header-safe {
+      padding-top: max(14px, env(safe-area-inset-top));
     }
 
-    .ios-modal-safe {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+    /* Dodatkowy bezpieczny odstęp wyłącznie gdy aplikacja działa w trybie pełnoekranowym na iOS */
+    @media all and (display-mode: standalone) {
+      .app-header-safe {
+        padding-top: max(20px, env(safe-area-inset-top));
+      }
+    }
+
+    /* Płynne przewijanie tylko wewnątrz kontenera głównego */
+    .scroll-container {
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
     * {
@@ -99,13 +115,13 @@
     }
   </style>
 </head>
-<body class="text-stone-100 min-h-screen ios-safe-bottom font-sans selection:bg-brand-500 selection:text-stone-950">
+<body class="text-stone-100 font-sans flex flex-col h-full w-full">
 
-  <!-- GÓRNY PASEK NAWIGACJI Z BEZPIECZNYM ODSTĘPEM DLA IPHONE (SAFE-AREA) -->
-  <header class="sticky top-0 z-40 bg-[#141210]/95 backdrop-blur-md border-b border-stone-800/80 ios-safe-header pb-3 px-4 w-full">
+  <!-- SZTYWNY NAGŁÓWEK (NIE PRZESUWA SIĘ POD ROZMYCIE SYSTEMOWE IOS) -->
+  <header class="shrink-0 z-40 bg-[#1c1917] border-b border-stone-800 app-header-safe pb-3 px-4 w-full shadow-md">
     <div class="max-w-lg mx-auto w-full flex items-center justify-between">
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-white shadow-md shadow-amber-600/30">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-orange-500 flex items-center justify-center font-bold text-white shadow-md shadow-amber-600/30">
           🔥
         </div>
         <div>
@@ -118,219 +134,222 @@
         </div>
       </div>
 
+      <!-- Duże, łatwe do trafienia przyciski odsunięte od górnej krawędzi -->
       <div class="flex items-center gap-2">
-        <button id="btnOpenHistory" type="button" class="px-3 py-2 rounded-xl bg-stone-850 text-xs font-semibold text-stone-200 hover:text-white active:scale-95 border border-stone-700/80 shadow-sm flex items-center gap-1.5 cursor-pointer touch-manipulation">
+        <button id="btnOpenHistory" type="button" class="px-3.5 py-2.5 rounded-xl bg-stone-800 text-xs font-bold text-stone-100 active:bg-amber-500 active:text-stone-950 border border-stone-700 shadow flex items-center gap-1.5 cursor-pointer touch-manipulation">
           <span>📅</span> <span>Historia</span>
-          <span id="historyCountBadge" class="px-1.5 py-0.2 bg-stone-800 text-amber-400 rounded-full text-[10px] font-mono">0</span>
+          <span id="historyCountBadge" class="px-1.5 py-0.2 bg-stone-900 text-amber-400 rounded-full text-[10px] font-mono">0</span>
         </button>
-        <button id="btnOpenPlans" type="button" class="px-3 py-2 rounded-xl bg-stone-850 text-xs font-semibold text-stone-200 hover:text-white active:scale-95 border border-stone-700/80 shadow-sm cursor-pointer touch-manipulation">
+        <button id="btnOpenPlans" type="button" class="px-3.5 py-2.5 rounded-xl bg-stone-800 text-xs font-bold text-stone-100 active:bg-amber-500 active:text-stone-950 border border-stone-700 shadow cursor-pointer touch-manipulation">
           📋 Plany
         </button>
       </div>
     </div>
   </header>
 
-  <!-- KONTENER GŁÓWNY -->
-  <main class="max-w-lg mx-auto w-full px-4 pt-3 space-y-4">
+  <!-- PRZEWIJANA ZAWARTOŚĆ APLIKACJI -->
+  <main class="flex-1 scroll-container w-full">
+    <div class="max-w-lg mx-auto w-full px-4 pt-3 pb-24 space-y-4">
 
-    <!-- MODUŁ LICZNIKA CZASU MIĘDZY SERIAMI (REST TIMER) -->
-    <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-3.5 shadow-lg shadow-black/40">
-      <div class="flex items-center justify-between mb-2">
-        <span class="text-xs font-semibold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
-          <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          Przerwa między seriami
-        </span>
-        <label class="flex items-center gap-1.5 text-[11px] text-stone-400 cursor-pointer">
-          <input type="checkbox" id="autoStartTimerCheck" checked class="rounded bg-stone-800 border-stone-700 text-amber-500 focus:ring-0">
-          <span>Auto-start</span>
-        </label>
-      </div>
-
-      <div class="flex items-center justify-between gap-3 bg-[#110f0d] border border-stone-800 rounded-xl p-2.5">
-        <div class="flex flex-col">
-          <span id="timerDisplay" class="font-mono text-3xl font-extrabold tracking-wider text-amber-400">01:30</span>
-          <span id="timerStatus" class="text-[10px] text-stone-500 font-medium">Gotowy do startu</span>
+      <!-- MODUŁ LICZNIKA CZASU MIĘDZY SERIAMI (REST TIMER) -->
+      <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-3.5 shadow-lg shadow-black/40">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-stone-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Przerwa między seriami
+          </span>
+          <label class="flex items-center gap-1.5 text-[11px] text-stone-400 cursor-pointer">
+            <input type="checkbox" id="autoStartTimerCheck" checked class="rounded bg-stone-800 border-stone-700 text-amber-500 focus:ring-0">
+            <span>Auto-start</span>
+          </label>
         </div>
 
-        <div class="flex items-center gap-1.5">
-          <button id="btnToggleTimer" type="button" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 active:scale-95 text-xs font-bold text-stone-950 shadow-md shadow-amber-600/30 transition touch-manipulation">
-            Start
-          </button>
-          <button id="btnAdd30s" type="button" class="px-2.5 py-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-xs font-semibold text-stone-300 border border-stone-700/80 touch-manipulation">
-            +30s
-          </button>
-          <button id="btnResetTimer" type="button" class="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 active:scale-95 text-stone-400 border border-stone-700/80 touch-manipulation" title="Resetuj">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-4 gap-1.5 mt-2.5">
-        <button type="button" data-seconds="60" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">60s</button>
-        <button type="button" data-seconds="90" class="btn-preset active py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95 touch-manipulation">90s</button>
-        <button type="button" data-seconds="120" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">120s</button>
-        <button type="button" data-seconds="180" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">180s</button>
-      </div>
-    </section>
-
-    <!-- AKTYWNY PLAN TRENINGOWY (WIDGET POSTĘPU) -->
-    <section id="activePlanWidget" class="hidden bg-stone-900 border border-amber-500/30 rounded-2xl p-3.5 shadow-lg">
-      <div class="flex items-center justify-between mb-1.5">
-        <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-          <span>🎯</span> <span id="activePlanTitle">Plan Treningowy</span>
-        </span>
-        <button id="btnCloseActivePlan" type="button" class="text-[11px] text-stone-400 hover:text-stone-200 px-2 py-0.5">Wyłącz plan</button>
-      </div>
-      <div class="w-full bg-stone-950 rounded-full h-1.5 mb-2 overflow-hidden border border-stone-800">
-        <div id="planProgressBar" class="bg-gradient-to-r from-amber-600 to-orange-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
-      </div>
-      <div id="activePlanExercises" class="flex gap-2 overflow-x-auto no-scrollbar py-0.5"></div>
-    </section>
-
-    <!-- FORMULARZ DODAWANIA SERII -->
-    <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-4 shadow-xl shadow-black/50">
-      <form id="setForm" onsubmit="return false;" class="space-y-3.5">
-        
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label class="text-xs font-semibold text-stone-400 uppercase tracking-wider">Ćwiczenie</label>
-            <span id="planTargetHint" class="text-[11px] font-mono text-amber-400 font-semibold hidden"></span>
-          </div>
-          <div class="relative">
-            <input 
-              type="text" 
-              id="exerciseInput" 
-              list="commonExercises" 
-              placeholder="np. Wyciskanie sztangi leżąc" 
-              autocomplete="off"
-              class="w-full bg-[#110f0d] border border-stone-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-stone-100 rounded-xl px-3.5 py-3 text-sm font-medium placeholder-stone-600 transition outline-none"
-            >
-            <datalist id="commonExercises">
-              <option value="Wyciskanie sztangi leżąc">
-              <option value="Wyciskanie hantli skos dodatni">
-              <option value="Przysiad ze sztangą">
-              <option value="Martwy ciąg">
-              <option value="Podciąganie na drążku">
-              <option value="Wiosłowanie sztangą w opadzie">
-              <option value="Wyciskanie żołnierskie (OHP)">
-              <option value="Wznosy bokiem na barki">
-              <option value="Dipsy (pompki na poręczach)">
-              <option value="Uginanie ramion z hantlami">
-              <option value="Prostowanie ramion na wyciągu">
-            </datalist>
+        <div class="flex items-center justify-between gap-3 bg-[#110f0d] border border-stone-800 rounded-xl p-2.5">
+          <div class="flex flex-col">
+            <span id="timerDisplay" class="font-mono text-3xl font-extrabold tracking-wider text-amber-400">01:30</span>
+            <span id="timerStatus" class="text-[10px] text-stone-500 font-medium">Gotowy do startu</span>
           </div>
 
-          <!-- Szybkie chipy ćwiczeń -->
-          <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
-            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Wyciskanie sztangi leżąc</button>
-            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Przysiad ze sztangą</button>
-            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Martwy ciąg</button>
-            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">Podciąganie na drążku</button>
-            <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap hover:bg-stone-800 hover:text-amber-300 border border-stone-800 touch-manipulation">OHP</button>
+          <div class="flex items-center gap-1.5">
+            <button id="btnToggleTimer" type="button" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 active:scale-95 text-xs font-bold text-stone-950 shadow-md shadow-amber-600/30 transition touch-manipulation">
+              Start
+            </button>
+            <button id="btnAdd30s" type="button" class="px-2.5 py-2 rounded-xl bg-stone-800 active:scale-95 text-xs font-semibold text-stone-300 border border-stone-700/80 touch-manipulation">
+              +30s
+            </button>
+            <button id="btnResetTimer" type="button" class="p-2 rounded-xl bg-stone-800 active:scale-95 text-stone-400 border border-stone-700/80 touch-manipulation" title="Resetuj">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-4 gap-1.5 mt-2.5">
+          <button type="button" data-seconds="60" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">60s</button>
+          <button type="button" data-seconds="90" class="btn-preset active py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95 touch-manipulation">90s</button>
+          <button type="button" data-seconds="120" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">120s</button>
+          <button type="button" data-seconds="180" class="btn-preset py-1.5 text-xs rounded-lg bg-stone-850 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation">180s</button>
+        </div>
+      </section>
+
+      <!-- AKTYWNY PLAN TRENINGOWY (WIDGET POSTĘPU) -->
+      <section id="activePlanWidget" class="hidden bg-stone-900 border border-amber-500/30 rounded-2xl p-3.5 shadow-lg">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+            <span>🎯</span> <span id="activePlanTitle">Plan Treningowy</span>
+          </span>
+          <button id="btnCloseActivePlan" type="button" class="text-[11px] text-stone-400 px-2 py-0.5">Wyłącz plan</button>
+        </div>
+        <div class="w-full bg-stone-950 rounded-full h-1.5 mb-2 overflow-hidden border border-stone-800">
+          <div id="planProgressBar" class="bg-gradient-to-r from-amber-600 to-orange-500 h-1.5 transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div id="activePlanExercises" class="flex gap-2 overflow-x-auto no-scrollbar py-0.5"></div>
+      </section>
+
+      <!-- FORMULARZ DODAWANIA SERII -->
+      <section class="bg-stone-900 border border-stone-800/90 rounded-2xl p-4 shadow-xl shadow-black/50">
+        <form id="setForm" onsubmit="return false;" class="space-y-3.5">
           
-          <!-- Ciężar -->
-          <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
-            <div class="flex justify-between items-center mb-1">
-              <span class="text-xs font-semibold text-stone-400">Ciężar (kg)</span>
-              <span class="text-[10px] text-amber-500/70 font-mono">krok 2.5</span>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-semibold text-stone-400 uppercase tracking-wider">Ćwiczenie</label>
+              <span id="planTargetHint" class="text-[11px] font-mono text-amber-400 font-semibold hidden"></span>
             </div>
-            <div class="flex items-center gap-1.5">
-              <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
+            <div class="relative">
               <input 
-                type="number" 
-                step="0.5" 
-                id="weightInput" 
-                value="60" 
-                class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
+                type="text" 
+                id="exerciseInput" 
+                list="commonExercises" 
+                placeholder="np. Wyciskanie sztangi leżąc" 
+                autocomplete="off"
+                class="w-full bg-[#110f0d] border border-stone-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-stone-100 rounded-xl px-3.5 py-3 text-sm font-medium placeholder-stone-600 transition outline-none"
               >
-              <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
+              <datalist id="commonExercises">
+                <option value="Wyciskanie sztangi leżąc">
+                <option value="Wyciskanie hantli skos dodatni">
+                <option value="Przysiad ze sztangą">
+                <option value="Martwy ciąg">
+                <option value="Podciąganie na drążku">
+                <option value="Wiosłowanie sztangą w opadzie">
+                <option value="Wyciskanie żołnierskie (OHP)">
+                <option value="Wznosy bokiem na barki">
+                <option value="Dipsy (pompki na poręczach)">
+                <option value="Uginanie ramion z hantlami">
+                <option value="Prostowanie ramion na wyciągu">
+              </datalist>
+            </div>
+
+            <!-- Szybkie chipy ćwiczeń -->
+            <div class="flex gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-0.5">
+              <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap active:bg-amber-500 active:text-stone-950 border border-stone-800 touch-manipulation">Wyciskanie sztangi leżąc</button>
+              <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap active:bg-amber-500 active:text-stone-950 border border-stone-800 touch-manipulation">Przysiad ze sztangą</button>
+              <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap active:bg-amber-500 active:text-stone-950 border border-stone-800 touch-manipulation">Martwy ciąg</button>
+              <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap active:bg-amber-500 active:text-stone-950 border border-stone-800 touch-manipulation">Podciąganie na drążku</button>
+              <button type="button" class="quick-chip px-2.5 py-1.5 rounded-lg bg-stone-850 text-[11px] font-medium text-stone-300 whitespace-nowrap active:bg-amber-500 active:text-stone-950 border border-stone-800 touch-manipulation">OHP</button>
             </div>
           </div>
 
-          <!-- Powtórzenia -->
-          <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
-            <div class="flex justify-between items-center mb-1">
-              <span class="text-xs font-semibold text-stone-400">Powtórzenia</span>
-              <span class="text-[10px] text-amber-500/70 font-mono">krok 1</span>
+          <div class="grid grid-cols-2 gap-3">
+            
+            <!-- Ciężar -->
+            <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs font-semibold text-stone-400">Ciężar (kg)</span>
+                <span class="text-[10px] text-amber-500/70 font-mono">krok 2.5</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btnWeightMinus" class="w-10 h-10 rounded-lg bg-stone-800 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
+                <input 
+                  type="number" 
+                  step="0.5" 
+                  id="weightInput" 
+                  value="60" 
+                  class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
+                >
+                <button type="button" id="btnWeightPlus" class="w-10 h-10 rounded-lg bg-stone-800 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
+              </div>
             </div>
-            <div class="flex items-center gap-1.5">
-              <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
-              <input 
-                type="number" 
-                step="1" 
-                id="repsInput" 
-                value="8" 
-                class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
-              >
-              <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-stone-800 hover:bg-stone-700 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
+
+            <!-- Powtórzenia -->
+            <div class="bg-[#110f0d] border border-stone-800/90 rounded-xl p-2.5">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-xs font-semibold text-stone-400">Powtórzenia</span>
+                <span class="text-[10px] text-amber-500/70 font-mono">krok 1</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" id="btnRepsMinus" class="w-10 h-10 rounded-lg bg-stone-800 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">−</button>
+                <input 
+                  type="number" 
+                  step="1" 
+                  id="repsInput" 
+                  value="8" 
+                  class="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 rounded-lg py-2 text-center text-lg font-mono font-bold text-stone-100 focus:outline-none"
+                >
+                <button type="button" id="btnRepsPlus" class="w-10 h-10 rounded-lg bg-stone-800 active:scale-90 text-lg font-bold text-stone-300 flex items-center justify-center transition border border-stone-700/80 touch-manipulation">+</button>
+              </div>
             </div>
+
           </div>
 
+          <button 
+            type="button" 
+            id="btnSaveSet" 
+            class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 active:scale-[0.98] font-bold text-stone-950 text-base shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition touch-manipulation"
+          >
+            <svg class="w-5 h-5 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+            Zapisz serię
+          </button>
+        </form>
+      </section>
+
+      <!-- LISTA ZAPISANYCH SERII DZISIAJ -->
+      <section class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold tracking-tight text-stone-200 uppercase tracking-wider">Bieżąca sesja</h2>
+            <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-850 text-amber-400 border border-stone-800">0 serii</span>
+          </div>
+
+          <div class="flex items-center bg-stone-900 border border-stone-800 p-0.5 rounded-lg text-[11px]">
+            <button id="viewGrouped" type="button" class="px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition">Grupy</button>
+            <button id="viewTimeline" type="button" class="px-2.5 py-1 rounded font-semibold text-stone-400 transition">Ostatnie</button>
+          </div>
         </div>
 
-        <button 
-          type="button" 
-          id="btnSaveSet" 
-          class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 active:scale-[0.98] font-bold text-stone-950 text-base shadow-lg shadow-amber-600/25 flex items-center justify-center gap-2 transition touch-manipulation"
-        >
-          <svg class="w-5 h-5 text-stone-950" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-          Zapisz serię
-        </button>
-      </form>
-    </section>
-
-    <!-- LISTA ZAPISANYCH SERII DZISIAJ -->
-    <section class="space-y-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <h2 class="text-sm font-bold tracking-tight text-stone-200 uppercase tracking-wider">Bieżąca sesja</h2>
-          <span id="setsCountBadge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-850 text-amber-400 border border-stone-800">0 serii</span>
+        <div id="workoutContainer" class="space-y-2.5">
+          <!-- Generowane dynamicznie -->
         </div>
 
-        <div class="flex items-center bg-stone-900 border border-stone-800 p-0.5 rounded-lg text-[11px]">
-          <button id="viewGrouped" type="button" class="px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition">Grupy</button>
-          <button id="viewTimeline" type="button" class="px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition">Ostatnie</button>
+        <!-- Przyciski akcji sesji -->
+        <div id="sessionActions" class="hidden pt-2 space-y-2">
+          <button 
+            id="btnFinishAndSaveWorkout" 
+            type="button"
+            class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition touch-manipulation"
+          >
+            <span>✅</span> Zakończ i zapisz trening w Historii
+          </button>
+          <button 
+            id="btnDiscardWorkout" 
+            type="button"
+            class="w-full py-2.5 px-3 rounded-xl bg-stone-900 text-stone-500 text-xs font-medium border border-stone-800 transition touch-manipulation"
+          >
+            Wyczyść dzisiejsze serie bez zapisywania
+          </button>
         </div>
-      </div>
+      </section>
 
-      <div id="workoutContainer" class="space-y-2.5">
-        <!-- Generowane dynamicznie -->
-      </div>
-
-      <!-- Przyciski akcji sesji: Zapisz trening do historii lub wyczyść -->
-      <div id="sessionActions" class="hidden pt-2 space-y-2">
-        <button 
-          id="btnFinishAndSaveWorkout" 
-          type="button"
-          class="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] font-bold text-white text-sm shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition touch-manipulation"
-        >
-          <span>✅</span> Zakończ i zapisz trening w Historii
-        </button>
-        <button 
-          id="btnDiscardWorkout" 
-          type="button"
-          class="w-full py-2.5 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-500 hover:text-rose-400 text-xs font-medium border border-stone-800 transition touch-manipulation"
-        >
-          Wyczyść dzisiejsze serie bez zapisywania
-        </button>
-      </div>
-    </section>
-
+    </div>
   </main>
 
-  <!-- MODAL 1: PLANY TRENINGOWY (Z UWZGLĘDNIENIEM SAFE AREA NA IPHONE) -->
-  <div id="plansModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 ios-modal-safe">
-    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+  <!-- MODAL 1: PLANY TRENINGOWE -->
+  <div id="plansModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[82vh] flex flex-col overflow-hidden shadow-2xl">
       <div class="px-4 py-3.5 border-b border-stone-800 flex items-center justify-between">
         <h3 class="font-bold text-stone-100 text-sm flex items-center gap-1.5">📋 Biblioteka Planów Treningowych</h3>
-        <button id="btnClosePlans" type="button" class="text-stone-400 hover:text-white text-2xl px-2 py-0.5 leading-none touch-manipulation">&times;</button>
+        <button id="btnClosePlans" type="button" class="text-stone-400 hover:text-white text-2xl px-3 py-1 leading-none touch-manipulation">&times;</button>
       </div>
 
-      <div class="p-4 overflow-y-auto space-y-5 text-xs">
+      <div class="p-4 overflow-y-auto space-y-5 text-xs pb-10">
         
         <div>
           <span class="font-semibold text-amber-400 uppercase tracking-wider text-[10px] block mb-2">Moje zapisane plany</span>
@@ -353,7 +372,7 @@
           </p>
           <input type="text" id="customPlanName" placeholder="Nazwa planu (np. FBW A - Poniedziałek)" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg px-2.5 py-2.5 mb-2 text-stone-100 outline-none focus:border-amber-500 font-medium">
           <textarea id="customPlanText" rows="4" placeholder="Przysiad ze sztangą 4x8&#10;Wyciskanie sztangi leżąc 4x8&#10;Wiosłowanie sztangą 4x10&#10;Wyciskanie żołnierskie 3x10" class="w-full bg-[#110f0d] border border-stone-800 rounded-lg p-2.5 text-stone-100 outline-none focus:border-amber-500 font-mono text-[11px] leading-relaxed"></textarea>
-          <button id="btnSaveCustomPlan" type="button" class="mt-2 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 rounded-xl font-bold transition shadow-md touch-manipulation">
+          <button id="btnSaveCustomPlan" type="button" class="mt-2 w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 rounded-xl font-bold transition shadow-md touch-manipulation">
             💾 Zapisz plan na stałe i aktywuj
           </button>
         </div>
@@ -363,17 +382,17 @@
   </div>
 
   <!-- MODAL 2: HISTORIA ZAPISANYCH TRENINGÓW -->
-  <div id="historyModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4 ios-modal-safe">
-    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl">
+  <div id="historyModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-stone-900 border border-stone-800 rounded-t-2xl sm:rounded-2xl max-w-lg w-full max-h-[82vh] flex flex-col overflow-hidden shadow-2xl">
       <div class="px-4 py-3.5 border-b border-stone-800 flex items-center justify-between">
         <div>
           <h3 class="font-bold text-stone-100 text-sm">📅 Zapisane Treningi (Historia)</h3>
           <p class="text-[10px] text-stone-400">Pełny dziennik odbytych sesji z czasem i seriami</p>
         </div>
-        <button id="btnCloseHistory" type="button" class="text-stone-400 hover:text-white text-2xl px-2 py-0.5 leading-none touch-manipulation">&times;</button>
+        <button id="btnCloseHistory" type="button" class="text-stone-400 hover:text-white text-2xl px-3 py-1 leading-none touch-manipulation">&times;</button>
       </div>
 
-      <div id="historyListContainer" class="p-4 overflow-y-auto space-y-3 text-xs flex-1">
+      <div id="historyListContainer" class="p-4 overflow-y-auto space-y-3 text-xs flex-1 pb-10">
         <!-- Generowane dynamicznie -->
       </div>
     </div>
@@ -395,6 +414,7 @@
     let workoutHistory = JSON.parse(localStorage.getItem(WORKOUT_HISTORY_KEY) || '[]');
     let currentView = 'grouped';
 
+    const mainScroll = document.querySelector('.scroll-container');
     const exerciseInput = document.getElementById('exerciseInput');
     const weightInput = document.getElementById('weightInput');
     const repsInput = document.getElementById('repsInput');
@@ -460,8 +480,8 @@
       }
       btnToggleTimer.textContent = timerRunning ? 'Pauza' : 'Start';
       btnToggleTimer.className = timerRunning 
-        ? 'px-3.5 py-2 rounded-xl bg-orange-700 hover:bg-orange-600 text-xs font-bold text-white shadow transition touch-manipulation'
-        : 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-xs font-bold text-stone-950 shadow transition touch-manipulation';
+        ? 'px-3.5 py-2 rounded-xl bg-orange-700 text-xs font-bold text-white shadow transition touch-manipulation'
+        : 'px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-xs font-bold text-stone-950 shadow transition touch-manipulation';
     }
 
     function playBeep() {
@@ -531,7 +551,7 @@
     presetButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         presetButtons.forEach(b => {
-          b.className = 'btn-preset py-1.5 text-xs rounded-lg bg-stone-850 hover:bg-stone-800 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation';
+          b.className = 'btn-preset py-1.5 text-xs rounded-lg bg-stone-850 text-stone-300 font-medium border border-stone-800 active:scale-95 touch-manipulation';
         });
         btn.className = 'btn-preset active py-1.5 text-xs rounded-lg bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 active:scale-95 touch-manipulation';
         timerTargetSeconds = parseInt(btn.dataset.seconds, 10);
@@ -704,7 +724,7 @@
         return `
           <div class="bg-stone-900 border border-stone-800/90 rounded-xl p-3 shadow">
             <div class="flex items-center justify-between border-b border-stone-800 pb-2 mb-2">
-              <span class="font-bold text-sm text-amber-400 cursor-pointer hover:underline" onclick="selectExercise('${exercise.replace(/'/g, "\\'")}')">
+              <span class="font-bold text-sm text-amber-400 cursor-pointer" onclick="selectExercise('${exercise.replace(/'/g, "\\'")}')">
                 ${exercise}
               </span>
               <span class="text-[11px] text-stone-400 font-mono">${groupSets.length} s.</span>
@@ -753,7 +773,7 @@
       exerciseInput.value = name;
       loadLastValuesForExercise(name);
       checkPlanHint();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      mainScroll.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     window.deleteSet = function(id) {
@@ -774,14 +794,14 @@
     document.getElementById('viewGrouped').addEventListener('click', () => {
       currentView = 'grouped';
       document.getElementById('viewGrouped').className = 'px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
-      document.getElementById('viewTimeline').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
+      document.getElementById('viewTimeline').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 transition';
       renderWorkout();
     });
 
     document.getElementById('viewTimeline').addEventListener('click', () => {
       currentView = 'timeline';
       document.getElementById('viewTimeline').className = 'px-2.5 py-1 rounded font-semibold bg-amber-500 text-stone-950 transition';
-      document.getElementById('viewGrouped').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 hover:text-stone-200 transition';
+      document.getElementById('viewGrouped').className = 'px-2.5 py-1 rounded font-semibold text-stone-400 transition';
       renderWorkout();
     });
 
@@ -976,7 +996,7 @@
       }
 
       container.innerHTML = savedCustomPlans.map((plan, idx) => `
-        <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500/60 transition">
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 transition">
           <div class="flex-1 cursor-pointer" onclick="activateSavedCustomPlan(${idx})">
             <p class="font-bold text-stone-100 text-xs">${plan.name}</p>
             <p class="text-[10px] text-amber-400 font-mono mt-0.5">
@@ -984,7 +1004,7 @@
             </p>
           </div>
           <div class="flex items-center gap-1.5 ml-2">
-            <button type="button" onclick="activateSavedCustomPlan(${idx})" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-stone-950 font-bold text-[11px] transition">
+            <button type="button" onclick="activateSavedCustomPlan(${idx})" class="px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-400 font-bold text-[11px] transition">
               Wczytaj
             </button>
             <button type="button" onclick="deleteSavedCustomPlan(${idx})" class="p-1.5 text-stone-500 hover:text-rose-400" title="Usuń plan">
@@ -1014,7 +1034,7 @@
     function renderTemplatesList() {
       const container = document.getElementById('templatesList');
       container.innerHTML = DEFAULT_TEMPLATES.map((tmpl, idx) => `
-        <button type="button" onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 hover:border-amber-500 text-left transition active:scale-95">
+        <button type="button" onclick="activatePlanFromTemplate(${idx})" class="p-2.5 rounded-xl bg-[#110f0d] border border-stone-800 text-left transition active:scale-95">
           <p class="font-bold text-stone-100 text-xs">${tmpl.name}</p>
           <p class="text-[10px] text-stone-400 font-mono mt-0.5">${tmpl.exercises.length} ćwiczeń</p>
         </button>
@@ -1134,7 +1154,7 @@
           <button type="button" onclick="selectPlanExercise('${ex.name.replace(/'/g, "\\'")}', ${ex.targetReps}, ${ex.targetSets})" class="px-2.5 py-1.5 rounded-xl border text-left whitespace-nowrap active:scale-95 transition flex flex-col gap-0.5 ${
             isDone 
               ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' 
-              : 'bg-[#110f0d] border-stone-800 text-stone-300 hover:border-amber-500/50'
+              : 'bg-[#110f0d] border-stone-800 text-stone-300'
           }">
             <div class="flex items-center gap-1.5">
               <span class="text-xs font-semibold">${ex.name}</span>
@@ -1154,7 +1174,7 @@
       repsInput.value = defaultReps || 8;
       loadLastValuesForExercise(name);
       checkPlanHint();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      mainScroll.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     renderWorkout();
